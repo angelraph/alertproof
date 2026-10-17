@@ -35,7 +35,14 @@ async function read(text) {
   return { ...r, how: 'gemma', ms: performance.now() - t0 };
 }
 
-const s = { accounts: 0, alerts: 0, gemma: 0, learned: 0, gemmaMs: [], learnedMs: [], links: 0, linksOk: 0, gaps: 0, noBalance: 0, attacks: { fake: [0, 0], replay: [0, 0], account: [0, 0] }, genuine: [0, 0] };
+const s = { accounts: 0, alerts: 0, gemma: 0, learned: 0, gemmaMs: [], learnedMs: [], read: [0, 0], links: 0, linksOk: 0, gaps: 0, smallGaps: 0, noBalance: 0,
+  genuineChain: { [PAID]: 0, [NO_RELEASE]: 0, "CAN'T TELL": 0 }, genuineAnchored: [0, 0],
+  attacks: { fake: [0, 0], replay: [0, 0], account: [0, 0] } };
+const truth = text => {
+  // The bank's own numbers, read straight from the alert's table, to grade what was read.
+  const row = k => (text.match(new RegExp(`\|\s*${k}\s*\|\s*(-?[\d,]+\.\d{2})`)) || [])[1];
+  return { amount: row('Amount') && toKobo(row('Amount')), balance: row('Available Balance') && toKobo(row('Available Balance')), direction: /\|\s*Transaction Type\s*\|\s*CREDIT/.test(text) ? 'CR' : /\|\s*Transaction Type\s*\|\s*DEBIT/.test(text) ? 'DR' : null };
+};
 for (const f of files) {
   s.accounts++;
   const alerts = split(await readFile(new URL(f, dir), 'utf8'));
@@ -43,56 +50,66 @@ for (const f of files) {
   for (const [i, text] of alerts.entries()) {
     const r = await read(text);
     s.alerts++; s[r.how]++; s[r.how + 'Ms'].push(r.ms);
+    const tr = truth(text);
+    if (tr.amount != null) { s.read[1]++; if (r.reading.amount === tr.amount && r.reading.balance === tr.balance && r.reading.direction === tr.direction) s.read[0]++; }
     if (r.reading.balance == null) s.noBalance++;
-    const entry = { id: i, raw: text, ...r.reading, addedAt: i };
-    // Genuine check: every real credit after the first should be PAID against the chain so far.
-    if (ledger.length && r.reading.direction === 'CR' && r.reading.balance != null) {
-      s.genuine[1]++;
-      if (check({ ...r.reading, raw: text }, { ledger, now: Date.now() + 1e12 }).verdict === PAID) s.genuine[0]++;
+    if (ledger.length && r.reading.direction === 'CR' && r.reading.balance != null && r.reading.amount != null) {
+      // Against the chain as the bank emailed it (gaps included)...
+      s.genuineChain[check({ ...r.reading, raw: text }, { ledger, now: 1e15 }).verdict]++;
+      // ...and after the trader sets their balance from the app once, as Alertproof asks after a gap.
+      s.genuineAnchored[1]++;
+      const anchor = { balance: r.reading.balance - r.reading.amount, at: Infinity };
+      if (check({ ...r.reading, raw: text }, { ledger, anchor, now: 1e15 }).verdict === PAID) s.genuineAnchored[0]++;
     }
-    ledger.push(entry);
+    ledger.push({ id: i, raw: text, ...r.reading, addedAt: i });
   }
   const withBal = ledger.filter(a => a.balance != null && a.amount != null);
   s.links += Math.max(0, withBal.length - 1);
   const gaps = audit(ledger);
-  s.gaps += gaps.length; s.linksOk += Math.max(0, withBal.length - 1) - gaps.length;
+  s.gaps += gaps.length; s.smallGaps += gaps.filter(g => Math.abs(g.gap) <= 100_00).length;
+  s.linksOk += Math.max(0, withBal.length - 1) - gaps.length;
 
-  // Fakes made from the real alerts. Each must be stopped.
+  // Fakes made from each real credit. Each is checked against the true balance just before it,
+  // so a fake has to be caught by the rule it breaks, not by an unrelated gap.
+  const account = f.match(/(\d{3})\.txt$/)?.[1];
   for (let i = 1; i < ledger.length; i++) {
     const a = ledger[i];
     if (a.direction !== 'CR' || a.balance == null) continue;
     const before = ledger.slice(0, i);
-    const tryAttack = async (kind, text) => {
+    const anchor = { balance: a.balance - a.amount, at: Infinity };
+    const attack = async (kind, text) => {
       const r = await read(text);
       s.attacks[kind][1]++;
-      if (check({ ...r.reading, raw: text }, { ledger: before.concat(kind === 'replay' ? [] : []), now: Date.now() + 1e12 }).verdict === NO_RELEASE) s.attacks[kind][0]++;
+      if (check({ ...r.reading, raw: text }, { account: account ? '2290000' + account : undefined, ledger: before, anchor, now: 1e15 }).verdict === NO_RELEASE) s.attacks[kind][0]++;
     };
-    // An invented balance: the same alert, with the balance changed the way a fake-alert app would.
-    const balStr = [...a.raw.matchAll(/\d[\d,]*\.\d{2}|\d[\d,]{3,}/g)].map(m => m[0]).find(x => toKobo(x) === a.balance);
-    if (balStr) await tryAttack('fake', a.raw.replace(balStr, balStr.replace(/\d(?=[^\d]*$)/, d => String((+d + 7) % 10)).replace(/^\d/, d => String((+d % 9) + 1))));
-    // An old alert sent again.
-    await tryAttack('replay', ledger[i - 1].direction === 'CR' ? ledger[i - 1].raw : a.raw);
-    // Another account: the visible account digits changed.
-    const tailRun = [...a.raw.matchAll(/[*Xx.]{2,}(\d{2,})\b/g)][0];
-    if (tailRun) await tryAttack('account', a.raw.replace(tailRun[0], tailRun[0].replace(/\d+$/, d => d.split('').map(x => String((+x + 3) % 10)).join(''))));
+    const balStr = [...a.raw.matchAll(/-?\d[\d,]*\.\d{2}/g)].map(m => m[0]).filter(x => toKobo(x) === a.balance);
+    if (balStr.length) {
+      const forged = balStr[0].replace(/^(-?)(\d)/, (_, sg, d) => sg + String((+d % 9) + 1));
+      await attack('fake', a.raw.split(balStr[0]).join(forged));
+    }
+    await attack('replay', before.filter(x => x.direction === 'CR').at(-1)?.raw || a.raw);
+    const mask = a.raw.match(/\*{2,}(\d{2,})\b/);
+    if (mask) await attack('account', a.raw.replace(mask[0], mask[0].replace(/\d+$/, d => d.split('').map(x => String((+x + 3) % 10)).join(''))));
   }
 }
 
 const med = a => a.length ? a.sort((x, y) => x - y)[Math.floor(a.length / 2)] : 0;
 const pair = ([a, b]) => `${a} of ${b}`;
+const g = s.genuineChain;
 const md = `# Alertproof on real alerts
 
-Generated by \`node eval/real.mjs ${model}\` from ${s.alerts} genuine alerts on ${s.accounts} real account${s.accounts === 1 ? '' : 's'}. Only counts are published; the alerts stay on the machine that ran the test.
+Generated by \`node eval/real.mjs ${model}\` from ${s.alerts} genuine bank alert emails on ${s.accounts} real account${s.accounts === 1 ? '' : 's'}. Only counts are published; the alerts never leave the machine that ran the test.
 
 | | |
 |---|---|
 | Real alerts read | ${s.alerts} |
-| Read by Gemma (first of a format, or one that didn't fit) | ${s.gemma}, median ${(med(s.gemmaMs) / 1000).toFixed(1)} s |
-| Read instantly from a learned format | ${s.learned}, median ${med(s.learnedMs).toFixed(2)} ms |
-| Balance chain links that add up | ${s.linksOk} of ${s.links} |
-| Chain gaps (an alert missing from the export, or a misread) | ${s.gaps} |
-| Alerts with no balance shown | ${s.noBalance} |
-| Real credits proven PAID | ${pair(s.genuine)} |
+| Amount, balance and credit/debit all read right | ${pair(s.read)} |
+| Read by Gemma (first alert of a layout, or one that didn't fit) | ${s.gemma}, median ${(med(s.gemmaMs) / 1000).toFixed(1)} s |
+| Read instantly from a learned layout | ${s.learned}, median ${med(s.learnedMs).toFixed(2)} ms |
+| Balance links that add up exactly | ${s.linksOk} of ${s.links} |
+| Links with a gap (the bank changed the balance without an alert) | ${s.gaps}, of which ${s.smallGaps} within ₦100 (interest, small charges) |
+| Real credits, against the chain as emailed | ${g[PAID]} PAID, ${g["CAN'T TELL"]} CAN'T TELL, ${g[NO_RELEASE]} NO RELEASE |
+| Real credits, after setting the balance from the app once | ${pair(s.genuineAnchored)} PAID |
 | Fakes with an invented balance stopped | ${pair(s.attacks.fake)} |
 | Old alerts sent again stopped | ${pair(s.attacks.replay)} |
 | Alerts with another account's digits stopped | ${pair(s.attacks.account)} |

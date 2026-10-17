@@ -9,6 +9,7 @@ import * as store from './lib/store.js';
 import { SHOP, HISTORY, OPENING, SCENARIOS, drawReceipt } from './lib/demo.js';
 import { RECORDED } from './lib/recorded.js';
 import { learn as learnFormat, apply as applyFormat } from './lib/template.js';
+import { sessionChecks, findSessions } from './lib/session.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -97,9 +98,17 @@ async function checkAlert(text) {
   out.innerHTML = `<p class="working">Gemma is reading the alert${engine?.kind === 'local' ? ' on this computer' : ''}…</p>`;
   try {
     const read = await readText(text);
+    if (read.reading.balance == null && (RECEIPT_WORDS.test(text) || findSessions(text).length)) {
+      const g = read.reading;
+      const status = (text.match(/\b(successful|pending|failed|reversed)\b/i) || [])[1] || '';
+      await receiptVerdict({ r: { status, amount: g.amount != null ? String(g.amount / 100) : '', sender_name: g.counterparty, direction: g.direction === 'CR' ? 'received' : '', time: g.time, session_id: findSessions(text)[0] || '' }, text, source: read.source });
+      return;
+    }
     const { account, anchor, ledger } = await book();
     const reading = { ...read.reading, raw: text };
     const result = check(reading, { account: account?.number, ledger, anchor, now: DEMO ? Date.parse('2026-10-17T11:30:00') : Date.now() });
+    const sess = sessionChecks(text);
+    if (sess.found) { result.checks.push(...sess.checks); if (sess.checks.some(c => c.ok === false)) result.verdict = NO_RELEASE; }
     const looks = differences(text, learn(ledger.map(a => a.raw)));
     const status = result.verdict === PAID ? 'paid' : result.verdict === NO_RELEASE ? 'blocked' : 'unsure';
     const record = { id: crypto.randomUUID(), raw: text, reading: read.reading, rejected: read.rejected, checks: result.checks, verdict: result.verdict, status, addedAt: Date.now(), source: read.source };
@@ -203,45 +212,75 @@ async function checkScreenshot(b64, recordedKey) {
       r = await reader(engine).receipt(b64);
       source = `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s`;
     }
-    const { account, anchor, ledger } = await book();
-    const amount = toKobo(String(r.amount || ''));
-    const acctDigits = String(r.recipient_account || '').replace(/\D/g, '');
-    const checks = [];
-    if (!account) checks.push({ ok: null, text: 'Add your account number in Setup to check who this was sent to.' });
-    else if (!acctDigits) checks.push({ ok: null, text: 'The screenshot shows no account number.' });
-    else if (sameAccount(account.number, acctDigits.slice(-3)) && (acctDigits.length < 10 || acctDigits === account.number)) checks.push({ ok: true, text: `Sent to your account (…${account.number.slice(-4)}).` });
-    else checks.push({ ok: false, text: `Sent to account ${acctDigits}, not yours (…${account.number.slice(-4)}).` });
-    const biz = (account?.biz || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const name = String(r.recipient_name || '').toLowerCase();
-    if (biz.length && name) checks.push(biz.some(w => name.includes(w)) ? { ok: true, text: `Recipient name "${r.recipient_name}" matches your business.` } : { ok: false, text: `Recipient name "${r.recipient_name}" is not your business name.` });
-    if (r.status && !/success|completed|sent/i.test(r.status)) checks.push({ ok: false, text: `The screenshot itself says "${r.status}".` });
-    const exp = amount != null ? expectAlert(amount, ledger, anchor) : null;
-    const wrongPlace = checks.some(c => c.ok === false);
-    const node = document.createElement('article');
-    node.className = 'verdict ' + (wrongPlace ? 'stop' : 'wait');
-    node.innerHTML = `
-      <header><span class="stamp">${wrongPlace ? NO_RELEASE : 'WAIT FOR ALERT'}</span><span class="amount">${amount != null ? naira(amount) : ''}</span></header>
-      <p class="say">${wrongPlace ? 'This screenshot is not a payment to you.' : 'A screenshot is not money. Anyone can edit one. Wait for your own alert.'}</p>
-      <img class="shot" alt="The customer's screenshot" src="data:image/jpeg;base64,${b64}">
-      <ul class="checks">${checks.map(c => `<li class="${c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'unk'}">${esc(c.text)}</li>`).join('')}</ul>
-      ${!wrongPlace && exp ? `<div class="expect">If this is real, your next alert will say <strong>CR ${naira(exp.amount)}</strong>${exp.balance != null ? ` and <strong>Avail Bal ${naira(exp.balance)}</strong>` : ''}. Share or paste it here and Alertproof will turn it green.</div>` : ''}
-      <details class="read"><summary>What Gemma read</summary><dl>${Object.entries(r).filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="meta">${esc(source)}. Numbers on a picture can't be checked against text, so Alertproof never trusts them: it only uses them to know which alert to wait for.</p></details>`;
-    out.replaceChildren(node);
-    if (!wrongPlace && amount != null) {
-      const waiting = await store.getMeta('waiting', []);
-      waiting.push({ id: crypto.randomUUID(), amount, name: r.sender_name || 'customer', expected: exp?.balance ?? null, at: Date.now() });
-      await store.setMeta('waiting', waiting);
-      renderWaiting();
-    }
-    if ('speechSynthesis' in window && await store.getMeta('speak', true)) {
-      const pidgin = await store.getMeta('pidgin', false);
-      speechSynthesis.cancel();
-      speechSynthesis.speak(new SpeechSynthesisUtterance(wrongPlace ? (pidgin ? 'No release am. This money no come your account.' : 'Don’t release. This was not sent to you.') : (pidgin ? 'Screenshot no be money. Wait for your alert.' : 'A screenshot is not money. Wait for your alert.')));
-    }
+    // What the picture says, as text, so the session ID can be checked against the printed time and bank.
+    const text = ['app', 'status', 'amount', 'sender_name', 'sender_bank', 'recipient_name', 'recipient_bank', 'time']
+      .map(k => r[k]).filter(Boolean).join('\n') + (r.session_id ? `\nSession ID ${r.session_id}` : '');
+    await receiptVerdict({ r, text, img: b64, source, fromImage: true });
   } catch (e) {
-    out.innerHTML = `<div class="card"><h3>Couldn't read that screenshot</h3><p>${esc(e.message)}</p></div>`;
+    out.innerHTML = `<div class="card"><h3>Couldn't read that screenshot</h3><p>${esc(e.message)}</p><p class="hint">Try again, or type the amount, time and session ID from the screenshot into the box and tap Check alert.</p></div>`;
   } finally {
     busy = false;
+  }
+}
+
+// A receipt is any proof of a transfer that isn't your own bank alert: a customer's "Transfer
+// Successful" screen, or transaction details pasted as text. It can never be PAID, because it
+// isn't your balance. It is NO RELEASE when it contradicts itself or names someone else.
+const RECEIPT_WORDS = /transfer successful|transaction details|session id|received from|completion time|transaction (?:no|id)|beneficiary|recipient/i;
+
+async function receiptVerdict({ r, text, img, source, fromImage }) {
+  const out = $('#result');
+  const { account, anchor, ledger } = await book();
+  const amount = toKobo(String(r.amount || ''));
+  const checks = [];
+  const received = /receiv|credited|money in|inflow/i.test(`${r.direction || ''} ${r.status || ''} ${text}`) && !r.recipient_account;
+  const acctDigits = String(r.recipient_account || '').replace(/\D/g, '');
+  if (received) checks.push({ ok: null, text: 'This is a "money received" record, so it names the sender, not your account. If it’s from your own bank app, the app balance is the real proof.' });
+  else if (!account) checks.push({ ok: null, text: 'Add your account number in Setup to check who this was sent to.' });
+  else if (!acctDigits) checks.push({ ok: null, text: 'The receipt shows no account number for the person paid.' });
+  else if (sameAccount(account.number, acctDigits.slice(-3)) && (acctDigits.length < 10 || acctDigits === account.number)) checks.push({ ok: true, text: `Sent to your account (…${account.number.slice(-4)}).` });
+  else checks.push({ ok: false, id: 'account', text: `Sent to account ${acctDigits}, not yours (…${account.number.slice(-4)}).` });
+  const biz = (account?.biz || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const name = String(r.recipient_name || '').toLowerCase();
+  if (!received && biz.length && name) checks.push(biz.some(w => name.includes(w)) ? { ok: true, text: `Recipient name "${r.recipient_name}" matches your business.` } : { ok: false, id: 'account', text: `Recipient name "${r.recipient_name}" is not your business name.` });
+  if (r.status && !/success|completed|sent|received|credited/i.test(r.status)) checks.push({ ok: false, text: `The receipt itself says "${r.status}".` });
+  const sess = sessionChecks(text);
+  checks.push(...sess.checks);
+  if (!sess.found) checks.push({ ok: null, text: 'No 30-digit session ID on it to check. Bank transfers usually show one under "Session ID".' });
+
+  const forged = sess.checks.some(c => c.ok === false);
+  const wrongPlace = checks.some(c => c.ok === false && c.id === 'account');
+  const stop = checks.some(c => c.ok === false);
+  const exp = amount != null ? expectAlert(amount, ledger, anchor) : null;
+  const say = forged ? 'This receipt contradicts itself. It was edited or generated. Don’t release.'
+    : wrongPlace ? 'This receipt is not a payment to you.'
+    : stop ? 'Something on this receipt is wrong. Don’t release.'
+    : sess.checks.some(c => c.ok === true) ? 'Its session ID checks out, so it looks like a real transfer. But a receipt is not money: wait for your own alert.'
+    : 'A receipt is not money. Anyone can edit one. Wait for your own alert.';
+  const order = c => (c.ok === false ? 0 : c.ok == null ? 2 : 1);
+  const node = document.createElement('article');
+  node.className = 'verdict ' + (stop ? 'stop' : 'wait');
+  node.innerHTML = `
+    <header><span class="stamp">${stop ? NO_RELEASE : 'WAIT FOR ALERT'}</span><span class="amount">${amount != null ? naira(amount) : ''}</span></header>
+    <p class="say">${esc(say)}</p>
+    ${img ? `<img class="shot" alt="The receipt" src="data:image/jpeg;base64,${img}">` : ''}
+    <ul class="checks">${[...checks].sort((a, b) => order(a) - order(b)).map(c => `<li class="${c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'unk'}">${esc(c.text)}</li>`).join('')}</ul>
+    ${!stop && exp ? `<div class="expect">When the money truly lands, your own alert will say <strong>CR ${naira(exp.amount)}</strong>${exp.balance != null ? ` and <strong>Avail Bal ${naira(exp.balance)}</strong>` : ''}. Share or paste it here and Alertproof will turn it green.</div>` : ''}
+    <details class="read"><summary>What Gemma read</summary><dl>${Object.entries(r).filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="meta">${esc(source)}. ${fromImage ? 'The session ID check uses the digits Gemma read off the picture; compare them with the screenshot.' : 'The session ID check reads the digits straight from the text you pasted.'}</p></details>`;
+  out.replaceChildren(node);
+  node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (!stop && amount != null) {
+    const waiting = await store.getMeta('waiting', []);
+    waiting.push({ id: crypto.randomUUID(), amount, name: r.sender_name || r.counterparty || 'customer', expected: exp?.balance ?? null, at: Date.now() });
+    await store.setMeta('waiting', waiting);
+    renderWaiting();
+  }
+  if ('speechSynthesis' in window && await store.getMeta('speak', true)) {
+    const pidgin = await store.getMeta('pidgin', false);
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(forged ? (pidgin ? 'No release am. Dem don edit this receipt.' : 'Don’t release. This receipt was edited.')
+      : stop ? (pidgin ? 'No release am. This money no come your account.' : 'Don’t release. This was not sent to you.')
+      : (pidgin ? 'Receipt no be money. Wait for your alert.' : 'A receipt is not money. Wait for your alert.')));
   }
 }
 
@@ -312,15 +351,18 @@ async function loadSetup() {
 async function teach(text) {
   const parts = (/^\s*-{3,}\s*$/m.test(text) ? text.split(/^\s*-{3,}\s*$/m) : text.split(/\n\s*\n/)).map(s => s.trim()).filter(Boolean);
   const out = $('#teach-out');
+  const skipped = [];
   let n = 0;
   for (const raw of parts) {
     out.innerHTML = `<p class="working">Reading alert ${n + 1} of ${parts.length}…</p>`;
-    const read = await readText(raw);
+    let read;
+    try { read = await readText(raw); } catch (e) { skipped.push(`couldn't read one (${e.message})`); continue; }
+    if (read.reading.balance == null) { skipped.push(RECEIPT_WORDS.test(raw) || findSessions(raw).length ? 'one is a transaction receipt, not an alert: it has no balance. Check receipts on the Check tab' : 'one shows no balance, so it can’t extend your chain'); continue; }
     await store.saveAlert({ id: crypto.randomUUID(), raw, reading: read.reading, rejected: read.rejected, status: 'mine', verdict: null, checks: [], addedAt: Date.now() + n, source: read.source });
     n++;
   }
   const gaps = audit((await book()).ledger);
-  out.innerHTML = `<p class="chainline ${gaps.length ? 'gap' : 'ok'}">Added ${n} alert${n === 1 ? '' : 's'}. ${gaps.length ? `${gaps.length} gap${gaps.length > 1 ? 's' : ''} in the chain: an alert is missing between them. Set your balance from the bank app to restart from now.` : 'Chain unbroken.'}</p>`;
+  out.innerHTML = `<p class="chainline ${gaps.length ? 'gap' : 'ok'}">Added ${n} alert${n === 1 ? '' : 's'}. ${gaps.length ? `${gaps.length} gap${gaps.length > 1 ? 's' : ''} in the chain: an alert is missing between them. Set your balance from the bank app to restart from now.` : n ? 'Chain unbroken.' : ''}</p>${skipped.length ? `<p class="hint">Not added: ${esc(skipped.join('; '))}.</p>` : ''}`;
   $('#teach-text').value = '';
   loadSetup(); renderToday();
 }

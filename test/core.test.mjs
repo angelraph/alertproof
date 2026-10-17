@@ -135,3 +135,42 @@ test('a learned format refuses to learn when amount and balance are the same num
   const T = {};
   assert.equal(learnFormat(T, 'Amt: NGN500.00 CR\nAvail Bal: NGN500.00', { amount: 50000, balance: 50000, direction: 'CR' }), null);
 });
+
+test('real alerts: an overdrawn balance with a minus sign is grounded', () => {
+  const text = '| Amount | 53.75 |\n| Transaction Type | DEBIT |\n| Available Balance | -276.75 |';
+  const { reading } = ground({ amount: 5375, balance: -27675, direction: 'DR' }, text);
+  assert.equal(reading.balance, -27675);
+});
+
+test('real alerts: a few naira of unalerted interest is CAN\'T TELL, never NO RELEASE or PAID', () => {
+  const r = check({ raw: 'x', amount: 2000000, balance: 3996381, direction: 'CR', account_tail: '503' }, { account: '2290000503', anchor: { balance: 1995000, at: 1 }, now: NOW });
+  assert.equal(r.verdict, CANT_TELL);
+});
+
+import { sessionChecks, decode } from '../lib/session.js';
+
+const REAL_RECEIPT = 'Received from ALIYU AISHAT HUB\n+₦21,907.00\nSuccessful\nSender ALIYU AISHAT HUB Nombank MFB 520****2779\nCompletion Time 20:10, Oct 16, 2026\nTransaction ID 603cfmoxf07\nSession ID 090645261016191057403015967666';
+const NOW16 = Date.parse('2026-10-17T06:00:00Z');
+
+test('session ID: a real Moniepoint receipt is consistent', () => {
+  const d = decode('090645261016191057403015967666');
+  assert.equal(d.bank, 'Nombank');
+  assert.equal(d.at.toISOString(), '2026-10-16T19:10:57.000Z');
+  const r = sessionChecks(REAL_RECEIPT, NOW16);
+  assert.ok(r.checks.every(c => c.ok === true), JSON.stringify(r.checks));
+});
+
+test('session ID: an edited time on the same receipt is caught', () => {
+  const r = sessionChecks(REAL_RECEIPT.replace('20:10, Oct 16', '14:35, Oct 16'), NOW16);
+  assert.equal(r.checks.find(c => c.id === 'session').ok, false);
+});
+
+test('session ID: a made-up ID with an impossible date is caught', () => {
+  const r = sessionChecks(REAL_RECEIPT.replace('090645261016191057403015967666', '090645261345991057403015967666'), NOW16);
+  assert.equal(r.checks[0].ok, false);
+});
+
+test('session ID: a receipt copied onto another day is caught', () => {
+  const r = sessionChecks(REAL_RECEIPT.replace('Oct 16, 2026', 'Oct 17, 2026').replace('20:10', '09:42'), NOW16);
+  assert.equal(r.checks.find(c => c.id === 'session').ok, false);
+});

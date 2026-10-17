@@ -20,7 +20,7 @@ The model never decides whether money is real.
 
 ## Try it
 
-- Live: https://alertproof.vercel.app (demo shop: `/app.html?demo`)
+- Live: https://alertproof.tech (demo shop: `/app.html?demo`)
 - Locally: `node serve.mjs`, then open http://localhost:5173
 
 For the private, offline setup, install [Ollama](https://ollama.com) and run `ollama pull gemma3:4b`. Alertproof finds it automatically. Without it, Alertproof can use Gemma 4 hosted by Google through `api/read.js` (set `GEMMA_API_KEY`).

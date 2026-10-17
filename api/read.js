@@ -23,8 +23,11 @@ function firstJson(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
+// Google's hosted models sometimes answer "Internal error" or an empty reply on a long input.
+// Each model gets two tries in different modes, then the next model takes over.
 async function gemma(parts) {
   let last;
+  let busy = false;
   for (const model of MODELS) {
     const call = config => fetch(`${API}/${model.trim()}:generateContent`, {
       method: 'POST',
@@ -33,21 +36,28 @@ async function gemma(parts) {
     });
     // JSON only, temperature 0. Gemma 4 thinks before it answers; minimal thinking keeps it fast.
     const base = { temperature: 0, responseMimeType: 'application/json' };
-    let res = await call({ ...base, maxOutputTokens: 2400, thinkingConfig: { thinkingLevel: 'minimal' } });
-    if (res.status === 400) res = await call({ ...base, maxOutputTokens: 8400 });
-    if (res.status === 400) res = await call({ temperature: 0, maxOutputTokens: 8400 });
-    if (res.status === 429) { const e = new Error('busy'); e.status = 429; throw e; }
-    if (res.status === 404) { last = new Error(`${model} not available`); continue; }
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || `Gemma answered ${res.status}`);
-    const answer = (data.candidates?.[0]?.content?.parts || []).filter(p => !p.thought).map(p => p.text || '').join('');
-    return { json: firstJson(answer), model: model.trim() };
+    const modes = [
+      { ...base, maxOutputTokens: 2400, thinkingConfig: { thinkingLevel: 'minimal' } },
+      { ...base, maxOutputTokens: 8400 },
+      { temperature: 0, maxOutputTokens: 8400 },
+    ];
+    for (const mode of modes) {
+      let res;
+      try { res = await call(mode); } catch (e) { last = e; continue; }
+      if (res.status === 429) { busy = true; last = new Error('busy'); break; }
+      if (res.status === 404) { last = new Error(`${model} not available`); break; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { last = new Error(data.error?.message || `Gemma answered ${res.status}`); continue; }
+      const answer = (data.candidates?.[0]?.content?.parts || []).filter(p => !p.thought).map(p => p.text || '').join('');
+      try { return { json: firstJson(answer), model: model.trim() }; } catch (e) { last = e; }
+    }
   }
+  if (busy && !last?.message?.includes('JSON')) { const e = new Error('busy'); e.status = 429; throw e; }
   throw last || new Error('no Gemma model available');
 }
 
 const ALERT_KEYS = 'bank, direction, amount, balance, account_tail, counterparty, reference, time';
-const RECEIPT_KEYS = 'app, status, amount, recipient_name, recipient_account, recipient_bank, sender_name, reference, time';
+const RECEIPT_KEYS = 'app, status, amount, recipient_name, recipient_account, recipient_bank, sender_name, sender_bank, direction, reference, session_id, time';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
