@@ -41,7 +41,11 @@ async function pickEngine() {
     if (on) engine = { kind: 'online', label: `Online Gemma (${on.model.replace(/-it$/, '')})` };
   }
   const pill = $('#engine');
-  pill.textContent = engine ? engine.label : DEMO ? 'Demo: recorded Gemma readings' : 'No Gemma found. See Setup';
+  // Full label on wide screens, two words on a phone: the logo must always fit.
+  const long = engine ? engine.label : DEMO ? 'Demo: recorded Gemma readings' : 'No Gemma found. See Setup';
+  const short = engine ? (engine.kind === 'local' ? 'On device' : 'Online') : DEMO ? 'Demo' : 'Set up';
+  pill.innerHTML = `<i class="dot" aria-hidden="true"></i><span class="long">${long}</span><span class="short">${short}</span>`;
+  pill.title = long;
   pill.className = 'pill ' + (engine ? 'on' : 'off');
 }
 

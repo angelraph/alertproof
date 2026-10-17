@@ -40,7 +40,7 @@ const s = { accounts: 0, alerts: 0, gemma: 0, learned: 0, gemmaMs: [], learnedMs
   attacks: { fake: [0, 0], replay: [0, 0], account: [0, 0] } };
 const truth = text => {
   // The bank's own numbers, read straight from the alert's table, to grade what was read.
-  const row = k => (text.match(new RegExp(`\|\s*${k}\s*\|\s*(-?[\d,]+\.\d{2})`)) || [])[1];
+  const row = k => (text.match(new RegExp(String.raw`\|\s*${k}\s*\|\s*(-?[\d,]+\.\d{2})`)) || [])[1];
   return { amount: row('Amount') && toKobo(row('Amount')), balance: row('Available Balance') && toKobo(row('Available Balance')), direction: /\|\s*Transaction Type\s*\|\s*CREDIT/.test(text) ? 'CR' : /\|\s*Transaction Type\s*\|\s*DEBIT/.test(text) ? 'DR' : null };
 };
 for (const f of files) {

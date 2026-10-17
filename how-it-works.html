@@ -77,6 +77,9 @@
           <h2>What we got wrong, and fixed</h2>
           <p>The first run released <strong>4 fakes</strong>. All four were alerts for someone else’s account that also carried the trader’s exact balance, the worst case. Two were in formats that show only two account digits (Zenith’s <code>01**876**32</code>, Access emails). Our grounding check demanded three, so the account check was skipped. We now accept two digits when they come straight after a mask, and only the digits the alert actually shows. Then we re-ran those formats: both fakes are now stopped, with no new false alarms.</p>
           <p>The other two are a true limit. OPay and PalmPay notifications show no account at all. If such an alert also carries your exact balance to the kobo, nothing in it can tell it apart from a real one. In practice that means someone has already seen your latest alert, so keep your alerts private.</p>
+          <h2>Then on real alerts</h2>
+          <p>We ran it on <strong>31 genuine Zenith Bank alert emails</strong> from two real accounts. All 31 were read correctly; Gemma read one and the learned layout read the other 30 in a fifth of a millisecond. From those real alerts we made 45 fakes (forged balance, replayed alert, another account's digits): <strong>all 45 were stopped</strong>. Every genuine credit was proven PAID once the balance had been set from the bank app.</p>
+          <p>Real alerts also showed us that banks add interest and take small charges without an alert. A difference of a few naira now says CAN'T TELL, never NO RELEASE.</p>
           <p>Full case-by-case results, including every value Gemma got wrong and the grounding check threw away: <a href="https://github.com/angelraph/alertproof/blob/main/eval/EVAL.md">eval/EVAL.md</a>.</p>
         </div>
       </div>

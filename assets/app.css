@@ -103,3 +103,18 @@ input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--bra
   .stamp { font-size: 28px; }
   .stats { grid-template-columns: 1fr 1fr; }
 }
+
+/* header on phones: the logo never shrinks, the status pill becomes a dot and two words */
+.brand { flex: none; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.pill.on .dot { box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent); }
+.pill .short { display: none; }
+.pill .long { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) {
+  .pill .long { display: none; }
+  .pill .short { display: inline; }
+  .pill { padding: 5px 10px; font-size: 12.5px; }
+  .brand { font-size: 19px; }
+  .brand img { width: 26px; height: 26px; }
+}

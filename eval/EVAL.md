@@ -107,7 +107,7 @@ For each format, Alertproof learned the layout from Gemma's single reading of th
 | Wrong amount, balance or direction | **0** |
 | Right verdict | 54 of 56 |
 | Fakes released | **2** |
-| Time per alert (median / slowest) | 0.06 ms / 1.04 ms |
+| Time per alert (median / slowest) | 0.14 ms / 3.22 ms |
 
 | Format | Learned from one reading | Right verdict, no Gemma | Back to Gemma |
 |---|---|---|---|
