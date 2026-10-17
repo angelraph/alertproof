@@ -1,39 +1,52 @@
 @font-face { font-family: 'Inter'; src: url('fonts/inter.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: 'Fraunces'; src: url('fonts/fraunces.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
+/* Alertproof design tokens. Emerald-to-mint from the logo on near-black, Mercury-calm surfaces. */
 :root {
-  --bg: #f6f3ec;
-  --paper: #fffdf8;
-  --ink: #17201b;
-  --muted: #5d675f;
-  --line: #e2dccf;
-  --brand: #0f6b3e;
-  --brand-ink: #ffffff;
-  --paid: #0f7a43;
-  --paid-bg: #e3f4e9;
-  --stop: #b3261e;
-  --stop-bg: #fbe5e3;
-  --wait: #8a5a00;
-  --wait-bg: #fdf1d8;
-  --radius: 14px;
-  --shadow: 0 1px 2px rgba(23, 32, 27, .06), 0 6px 24px rgba(23, 32, 27, .06);
+  --bg: #f5f8f6;
+  --bg-2: #eaf1ed;
+  --paper: #ffffff;
+  --ink: #0a1712;
+  --muted: #55675e;
+  --line: #dbe5df;
+  --brand: #0aa57d;
+  --brand-2: #6fdc8c;
+  --brand-ink: #03130d;
+  --grad: linear-gradient(135deg, #0bb38a 0%, #8cf0a0 100%);
+  --paid: #07875f;
+  --paid-bg: #e2f6ec;
+  --stop: #c62b22;
+  --stop-bg: #fde8e6;
+  --wait: #9a6300;
+  --wait-bg: #fdf2d9;
+  --radius: 18px;
+  --shadow: 0 1px 2px rgba(6, 25, 17, .05), 0 12px 32px rgba(6, 25, 17, .08);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1a14; --paper: #16241c; --ink: #eef3ee; --muted: #a2b0a6; --line: #2a3a30;
-    --brand: #37b26c; --brand-ink: #06140c;
-    --paid: #5fd394; --paid-bg: #12331f; --stop: #ff8a80; --stop-bg: #3a1714; --wait: #f0c065; --wait-bg: #33280f;
-    --shadow: none; color-scheme: dark;
+    --bg: #050d09; --bg-2: #0a1610; --paper: #0d1b14; --ink: #ecf6f0; --muted: #93a99d; --line: #1b2f25;
+    --brand: #19c79b; --brand-2: #8cf0a0; --brand-ink: #03130d;
+    --paid: #5fe0a2; --paid-bg: #0e2e20; --stop: #ff8a80; --stop-bg: #34110e; --wait: #f3c45f; --wait-bg: #2f230b;
+    --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 20px 40px rgba(0, 0, 0, .35); color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #050d09; --bg-2: #0a1610; --paper: #0d1b14; --ink: #ecf6f0; --muted: #93a99d; --line: #1b2f25;
+  --brand: #19c79b; --brand-2: #8cf0a0; --brand-ink: #03130d;
+  --paid: #5fe0a2; --paid-bg: #0e2e20; --stop: #ff8a80; --stop-bg: #34110e; --wait: #f3c45f; --wait-bg: #2f230b;
+  --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 20px 40px rgba(0, 0, 0, .35); color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Inter, system-ui, sans-serif; }
-h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; line-height: 1.15; letter-spacing: -.01em; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: Inter, system-ui, sans-serif; font-weight: 800; line-height: 1.08; letter-spacing: -.03em; }
 a { color: var(--brand); }
-button, input, textarea { font: inherit; color: inherit; }
-code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--line); padding: 0 .3em; border-radius: 4px; }
-img { max-width: 100%; }
+button, input, textarea, select { font: inherit; color: inherit; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--bg-2); padding: .05em .35em; border-radius: 5px; }
+img, svg { max-width: 100%; }
+.grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.wordmark { font-weight: 800; letter-spacing: -.035em; }
+.wordmark b { font-weight: 800; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

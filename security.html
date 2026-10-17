@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Alertproof Security</title>
+  <meta name="description" content="Your balance is the secret that protects you, so Alertproof keeps it on your device. What we store, what we never see, and the honest limits.">
+  <meta name="theme-color" content="#050d09">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="security">
+  <header id="site-nav"></header>
+  <main>
+    <section class="phero">
+      <div class="container center">
+        <span class="eyebrow"><span class="dot">🔒</span>Security &amp; privacy</span>
+        <h1 class="h-lg" style="margin-top:20px">Your balance protects you.<br><span class="grad-text">So it never leaves you.</span></h1>
+        <p class="lede">Alertproof works because nobody else knows your balance. Sending your alerts to someone else’s server would give away the very thing that protects you. So we don’t.</p>
+      </div>
+    </section>
+
+    <section class="sec-tight">
+      <div class="container grid-3">
+        <div class="card glow rv"><div class="icon">📱</div><h3>Stored on your device only</h3><p>Your account number, balance and alerts live in your browser’s storage on your own phone or laptop. There is no Alertproof account and no Alertproof database.</p></div>
+        <div class="card glow rv d1"><div class="icon">🧠</div><h3>AI that runs at home</h3><p>With Gemma on your laptop, alerts are read on your machine and never cross the internet. It even works with your data switched off.</p></div>
+        <div class="card glow rv d2"><div class="icon">🚫</div><h3>We never touch money</h3><p>Alertproof can’t see your bank account, can’t move money, and never asks for your PIN, password, BVN or OTP. Anyone who asks for them is not us.</p></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="container prose" style="margin:0 auto">
+        <h2>If you use online Gemma</h2>
+        <p>On a phone without a laptop, Alertproof can send the <strong>text of one alert</strong> (or one screenshot) to Gemma hosted by Google, through our small server function. The function passes it through and keeps nothing: no logs of alert text, no database. Your balance chain and book still stay on your phone. You can switch online reading off in Setup at any time.</p>
+        <h2>What Alertproof can’t protect against</h2>
+        <ul>
+          <li><strong>Someone who has seen your latest alert</strong> knows your balance. Don’t show your alerts to customers, and don’t post them in group chats.</li>
+          <li><strong>A missed alert</strong> (a charge, a debit) breaks the chain. Alertproof says so and asks you to set your balance again. It doesn’t guess.</li>
+          <li><strong>Reversed transfers.</strong> A real transfer can occasionally be reversed by a bank later. Alertproof proves the alert is real, not that a bank won’t reverse it.</li>
+        </ul>
+        <h2>Open source, so you don’t have to trust us</h2>
+        <p>Every line of Alertproof is public under the MIT licence: the rules, the prompts, the tests and the evaluation. <a href="https://github.com/angelraph/alertproof">Read the code on GitHub.</a></p>
+        <h2>Report a problem</h2>
+        <p>Found a way to fool Alertproof? We want to know. <a href="https://github.com/angelraph/alertproof/issues">Open an issue on GitHub</a>, and leave out any real account numbers.</p>
+      </div>
+    </section>
+  </main>
+  <footer id="site-foot"></footer>
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

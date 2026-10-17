@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>How Alertproof Works</title>
+  <meta name="description" content="Gemma reads the alert. Code checks every number is written in it. Your balance chain decides. The model never decides whether money is real.">
+  <meta name="theme-color" content="#050d09">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="how">
+  <header id="site-nav"></header>
+  <main>
+    <section class="phero">
+      <div class="container center">
+        <span class="eyebrow"><span class="dot">⛓</span>How it works</span>
+        <h1 class="h-lg" style="margin-top:20px">The model reads.<br><span class="grad-text">Arithmetic decides.</span></h1>
+        <p class="lede">AI is good at reading messy text from forty different banks. It is not something you should trust with your money. So Alertproof splits the job in three.</p>
+      </div>
+    </section>
+
+    <section class="sec-tight">
+      <div class="container">
+        <div class="grid-3">
+          <div class="card rv"><span class="pill g">1 · Read</span><h3>Gemma reads the alert</h3><p>Every bank words its alerts differently and changes them often. Gemma, an open-weight model, turns any alert into the same fields: credit or debit, amount, balance, account digits, reference, time.</p></div>
+          <div class="card rv d1"><span class="pill g">2 · Ground</span><h3>Code checks what Gemma read</h3><p>Every number must be written in the alert itself. So must the bank name and the credit/debit word. Anything Gemma made up is thrown away, and Gemma is asked once more, told what was wrong.</p></div>
+          <div class="card rv d2"><span class="pill g">3 · Decide</span><h3>Your balance chain decides</h3><p>Last balance + amount must equal the new balance, to the kobo. The account must be yours. The reference must be new. Only then: PAID.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="container">
+        <div class="center rv"><p class="kicker">The chain</p><h2 class="h-lg">Why a fake can’t pass</h2><p class="lede">A fake-alert app lets a fraudster type any sender, amount and wording. To pass Alertproof, it would also need your exact balance after your last alert, which only you and your bank know.</p></div>
+        <div class="chain rv d1">
+          <div class="link"><span class="pill b" style="background:var(--bg-2);color:var(--brand)">Start</span><div class="amt">Bank app</div><div class="bal">Bal ₦52,310.50</div></div>
+          <div class="link"><span class="pill g">CR</span><div class="amt">+₦4,500</div><div class="bal">= ₦56,810.50 ✓</div></div>
+          <div class="link"><span class="pill g">CR</span><div class="amt">+₦1,200</div><div class="bal">= ₦58,010.50 ✓</div></div>
+          <div class="link"><span class="pill a">DR</span><div class="amt">−₦12,500</div><div class="bal">= ₦45,510.50 ✓</div></div>
+          <div class="link bad"><span class="pill r">Fake</span><div class="amt">+₦25,000</div><div class="bal">says ₦264,870.20 ✗<br>should be ₦70,510.50</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec-tight">
+      <div class="container">
+        <div class="center rv"><p class="kicker">The rules</p><h2 class="h-lg">Every check, in plain words</h2></div>
+        <div class="tbl-wrap rv"><table class="tbl">
+          <thead><tr><th>Check</th><th>Passes when</th><th>If it fails</th></tr></thead>
+          <tbody>
+            <tr><td><b>Direction</b></td><td>It’s a credit, and the alert’s own words say so</td><td>NO RELEASE: money went out, not in</td></tr>
+            <tr><td><b>Account</b></td><td>The visible account digits match yours</td><td>NO RELEASE: paid to someone else</td></tr>
+            <tr><td><b>Replay</b></td><td>You’ve never received this alert or reference before, and it isn’t more than a day old</td><td>NO RELEASE: an old alert sent again</td></tr>
+            <tr><td><b>Balance</b></td><td>Last balance + amount = new balance, exactly</td><td>NO RELEASE, or CAN’T TELL if it’s a small shortfall like a bank charge</td></tr>
+            <tr><td><b>Format</b></td><td>It looks like your real alerts from this bank</td><td>A warning only. Banks do change formats.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <section class="sec" id="eval">
+      <div class="container">
+        <div class="center rv"><p class="kicker">Tested, not promised</p><h2 class="h-lg">70 alerts. 10 formats. Real and fake.</h2><p class="lede">We ran Gemma 3 4B on a laptop with no graphics card over SMS, push and email formats from GTBank, Access, Zenith, UBA, First Bank, OPay, Moniepoint and PalmPay. Every format got real credits, a debit, a fake with an invented balance, a fake with a round balance, an alert for someone else’s account, and an old alert sent again.</p></div>
+        <div class="stats rv" id="eval-stats">
+          <div><b class="grad-text">0 / 20</b><span>invented-balance fakes released</span></div>
+          <div><b>10 / 10</b><span>old alerts sent again, stopped</span></div>
+          <div><b id="ev-genuine">–</b><span>genuine payments proven PAID</span></div>
+          <div><b id="ev-time">~40s</b><span>per alert on a CPU-only laptop</span></div>
+        </div>
+        <div class="prose rv" style="margin:32px auto 0">
+          <h2>What we got wrong, and fixed</h2>
+          <p>The first run released <strong>2 fakes</strong>. Both were alerts for someone else’s account, in formats that show almost none of the account number: Zenith shows only <code>01**876**32</code>, and OPay notifications show no account at all. Our grounding check only accepted three or more visible digits, so the account check was skipped. We now accept two digits when they come straight after a mask, and only the digits the alert actually shows. Then we re-ran those formats.</p>
+          <p>One case is a true limit. If an alert shows no account at all <em>and</em> carries your exact balance to the kobo, nothing in it can tell it apart from a real one. In practice that means someone has already seen your latest alert, so keep your alerts private.</p>
+          <p>Full case-by-case results, including every value Gemma got wrong and the grounding check threw away: <a href="https://github.com/angelraph/alertproof/blob/main/eval/EVAL.md">eval/EVAL.md</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec-tight">
+      <div class="container">
+        <div class="band rv"><h2>Watch the chain work.</h2><p>Five customers, one demo shop, every rule above in action.</p><div class="btns"><a class="btn btn-dark" href="app.html?demo">Open the demo shop <span class="arr">→</span></a></div></div>
+      </div>
+    </section>
+  </main>
+  <footer id="site-foot"></footer>
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

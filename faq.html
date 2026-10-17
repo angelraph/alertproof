@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Alertproof FAQ</title>
+  <meta name="description" content="Answers about fake alerts, how Alertproof checks them, privacy, setup, banks and pricing.">
+  <meta name="theme-color" content="#050d09">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="faq">
+  <header id="site-nav"></header>
+  <main>
+    <section class="phero">
+      <div class="container center">
+        <span class="eyebrow"><span class="dot">?</span>FAQ</span>
+        <h1 class="h-lg" style="margin-top:20px">Questions traders ask us</h1>
+        <p class="lede">Can’t find yours? <a href="about.html#contact">Ask us.</a></p>
+      </div>
+    </section>
+
+    <section class="sec-tight">
+      <div class="container">
+        <input id="faq-search" class="faq-search" type="search" placeholder="Search questions, e.g. “screenshot” or “OPay”" aria-label="Search the FAQ">
+        <div class="faq">
+          <h3>The basics</h3>
+          <details><summary>What is a fake alert?</summary><div>A message that looks like a bank credit alert but isn’t. It might come from a fake-alert app that sends a bank-looking SMS, an edited “Transfer Successful” screenshot, or a real old alert sent again. The customer leaves with your goods; the money never comes.</div></details>
+          <details><summary>How does Alertproof know an alert is fake?</summary><div>Every real alert shows your new balance, and it must equal your last balance plus the amount, to the kobo. A fraudster can copy the words but not your balance. Alertproof also checks the account is yours and that the alert isn’t one you’ve already received. <a href="how-it-works.html">See how it works.</a></div></details>
+          <details><summary>Does the AI decide whether the money is real?</summary><div>No. Gemma only reads the alert and fills in the fields. Plain code then checks every number Gemma read is really written in the alert, and the balance arithmetic decides. The AI can misread; it can’t say PAID.</div></details>
+          <details><summary>What do PAID, NO RELEASE and CAN’T TELL mean?</summary><div><b>PAID</b>: the balance continues your chain exactly, it’s your account, and it’s a new alert. <b>NO RELEASE</b>: something is provably wrong. <b>CAN’T TELL</b>: there isn’t enough to prove it either way, so check your bank app before releasing the goods.</div></details>
+
+          <h3>Screenshots and customers</h3>
+          <details><summary>A customer showed me a “Transfer Successful” screenshot. Is that enough?</summary><div>No. A screenshot is a picture: it can be edited, reused, or show a transfer that later fails. Alertproof checks the screenshot was sent to your account, then tells you exactly what your own alert must say. Wait for that alert.</div></details>
+          <details><summary>The customer says “e go soon enter”. What do I do?</summary><div>Check their screenshot in Alertproof. It goes on your waiting list with the exact balance your alert must show. When the real alert lands and matches, it turns green by itself.</div></details>
+
+          <h3>Setup</h3>
+          <details><summary>What do I need to start?</summary><div>Your account number and your current balance from your bank app. That’s all. You can also paste a few recent alerts so Alertproof learns your bank’s format.</div></details>
+          <details><summary>How do I check an SMS quickly?</summary><div>On Android, install Alertproof to your home screen. Then long-press the alert SMS, tap Share, and choose Alertproof. You can also copy and paste any alert or email.</div></details>
+          <details><summary>Why does it say CAN’T TELL when I know the money came?</summary><div>Usually an alert was missed: a bank charge, an SMS fee or a debit you didn’t add. The chain breaks, and Alertproof won’t guess. Set your balance from your bank app again and you’re back on track.</div></details>
+          <details><summary>Does it work without internet?</summary><div>Yes, with Gemma on a laptop. SMS alerts still arrive when data is down, and Alertproof reads them offline. On a phone-only setup, reading needs data.</div></details>
+          <details><summary>How fast is it?</summary><div>About 40 seconds per alert with Gemma on a laptop with no graphics card, and seconds with online Gemma or a laptop with a graphics card. The arithmetic itself is instant.</div></details>
+
+          <h3>Banks and formats</h3>
+          <details><summary>Which banks does it work with?</summary><div>We’ve tested SMS, push and email alert formats from GTBank, Access, Zenith, UBA, First Bank, OPay, Moniepoint and PalmPay. Because Gemma reads any wording, other banks usually work too. If yours doesn’t, tell us.</div></details>
+          <details><summary>My bank’s alert shows no balance. What happens?</summary><div>Without a balance there’s nothing to check against, so Alertproof says CAN’T TELL. Check your bank app before releasing. Many banks let you switch on balance in alerts.</div></details>
+          <details><summary>Can I use more than one account?</summary><div>Today Alertproof checks one account per device. Several accounts (for example a Moniepoint POS account and a GTBank account) are on the roadmap.</div></details>
+
+          <h3>Privacy and money</h3>
+          <details><summary>Where are my alerts stored?</summary><div>Only on your device. There is no Alertproof account or database. <a href="security.html">Read about security.</a></div></details>
+          <details><summary>Will you ever ask for my PIN or password?</summary><div>Never. Alertproof can’t access your bank and can’t move money. Anyone asking for your PIN, password, BVN or OTP “for Alertproof” is a scammer.</div></details>
+          <details><summary>How much does it cost?</summary><div>It’s free during the beta. At launch, running it on your own laptop stays free forever; the phone plan is planned at ₦1,500 a month. <a href="pricing.html">See pricing.</a></div></details>
+          <details><summary>Why “open-weight” AI?</summary><div>Open-weight means the model (Google’s Gemma) can run on your own computer. Your alerts stay private, there’s no per-check bill, and when banks change their formats we can test and adapt the model ourselves.</div></details>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer id="site-foot"></footer>
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

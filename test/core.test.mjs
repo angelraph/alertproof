@@ -99,3 +99,11 @@ test('fingerprint notices a fake written in another bank\'s style', () => {
   const fake = 'GTBank Alert\nCredit Amt: N15,000\nAcct No: 0***4821\nBalance: N250,000\n17/10/2026';
   assert.ok(differences(fake, profile).length >= 2);
 });
+
+test('ground accepts a two-digit tail only right after a mask, and only the digits shown', () => {
+  const text = 'Acct:01**876**32\nDT:17/10/2026 11:00:00\nCR Amt:1,000.00\nBal:5,000.00';
+  assert.equal(ground({ account_tail: '32' }, text).reading.account_tail, '32');
+  assert.equal(ground({ account_tail: '5432' }, text).reading.account_tail, '32');
+  assert.equal(ground({ account_tail: '21' }, text).reading.account_tail, null);
+  assert.equal(ground({ account_tail: '00' }, 'Amt: NGN1,000.00 Bal: NGN5,000.00').reading.account_tail, null);
+});

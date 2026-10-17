@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0f6b3e"/>
-  <path d="M32 11 50 18v13c0 11.5-7.6 19.8-18 23-10.4-3.2-18-11.5-18-23V18z" fill="#fffdf8"/>
-  <text x="32" y="41" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="22" fill="#0f6b3e">₦</text>
-  <path d="m38 41 4 4 8-9" fill="none" stroke="#f0b429" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="ap-g" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0bb38a"/>
+      <stop offset="1" stop-color="#8cf0a0"/>
+    </linearGradient>
+    <linearGradient id="ap-r" x1="14" y1="52" x2="56" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14c79b"/>
+      <stop offset="1" stop-color="#a6f5b0"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 4 54 12.5V30c0 14.6-9.2 24.6-22 29.5C19.2 54.6 10 44.6 10 30V12.5Z" fill="url(#ap-g)"/>
+  <path d="M32 12.5 46.5 18V30c0 9.9-5.8 17.2-14.5 21-8.7-3.8-14.5-11.1-14.5-21V18Z" fill="#07130e"/>
+  <path d="m24.5 31.5 6 6 11-12.5" fill="none" stop-color="#fff" stroke="url(#ap-g)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15.5 47.5c11.5 2.2 26-4.4 39.5-21.5l1.5 6.8C44 49 30 56.5 19.5 54.5Z" fill="url(#ap-r)" opacity=".95"/>
 </svg>

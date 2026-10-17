@@ -1,90 +1,272 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Alertproof</title>
-  <meta name="description" content="Fake alerts can copy your bank's words. They can't know your balance. Alertproof checks every alert against your own balance chain before you hand over the goods.">
-  <meta name="theme-color" content="#0f6b3e">
-  <meta property="og:title" content="Alertproof: check the alert before you release the goods">
+  <meta name="description" content="Stop fake bank alerts at the counter. Alertproof checks every alert against your own balance before you release the goods. Runs on open-weight Gemma, on your own device.">
+  <meta name="theme-color" content="#050d09">
+  <meta property="og:title" content="Alertproof: Real alerts. Real checks. No fake.">
   <meta property="og:description" content="A fake alert can copy your bank's words. It can't know your balance.">
+  <meta property="og:image" content="assets/icon-512.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/site.css">
 </head>
-<body>
-  <header class="top">
-    <a class="brand" href="./"><img src="assets/icon.svg" alt="" width="30" height="30">Alertproof</a>
-    <nav><a href="#how">How it works</a><a href="#limits">Limits</a><a href="https://github.com/angelraph/alertproof">Code</a></nav>
-  </header>
+<body data-page="home">
+  <header id="site-nav"></header>
 
   <main>
+    <!-- HERO -->
     <section class="hero">
-      <p class="kicker">For traders, POS agents and anyone paid by transfer</p>
-      <h1>A fake alert can copy your bank’s words. <em>It can’t know your balance.</em></h1>
-      <p class="lede">The customer says “I don send am”, the phone buzzes, and you have five seconds to decide whether to hand over the goods. Alertproof reads the alert with Gemma on your own device, then checks it against the only thing a fraudster never has: the running balance in your real alerts.</p>
-      <div class="cta">
-        <a class="primary" href="app.html?demo">Try the demo shop</a>
-        <a class="secondary" href="app.html">Open Alertproof</a>
+      <div class="container grid">
+        <div>
+          <span class="eyebrow"><span class="dot">₦</span>Built for Nigerian traders, POS agents and anyone paid by transfer</span>
+          <h1 class="h-xl">Fake alert?<span class="line2 grad-text">Not for this shop.</span></h1>
+          <p class="lede">A fake alert can copy your bank’s words. <strong style="color:var(--ink)">It can’t know your balance.</strong> Alertproof reads every alert with open-weight Gemma on your own device, then checks it against the balance in your real alerts, before the goods leave your hand.</p>
+          <div class="btns">
+            <a class="btn btn-primary" href="app.html?demo">Try the demo shop <span class="arr">→</span></a>
+            <a class="btn btn-ghost" href="#spot">Play “Spot the fake”</a>
+          </div>
+          <div class="proof-row">
+            <span><svg width="16" height="16" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>No sign-up</span>
+            <span><svg width="16" height="16" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Your alerts never leave your device</span>
+            <span><svg width="16" height="16" viewBox="0 0 16 16"><path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Works without data</span>
+          </div>
+        </div>
+
+        <div class="stage" aria-label="Alertproof checking alerts on a phone">
+          <div class="chip c1"><span class="ico g">✓</span><span><b>₦15,000 landed</b>Chain unbroken</span></div>
+          <div class="chip c2"><span class="ico r">✗</span><span><b>Fake stopped</b>₦25,000 saved</span></div>
+          <div class="chip c3"><span class="ico b">🔊</span><span><b>“No release am.”</b>Spoken in Pidgin</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="notch"></div>
+              <div class="status"><span>12:05</span><span>●●● 4G</span></div>
+              <div class="apphead"><img src="assets/icon.svg" alt="">Alertproof<span class="live">● Gemma on device</span></div>
+              <div class="feed" id="feed"></div>
+              <div class="typing" id="typing"><i></i><i></i><i></i> Gemma is reading the alert…</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <p class="small">The demo has no sign-up and nothing to install. It opens a provisions shop with six real-format GTBank alerts in its book, then lets you play five customers.</p>
     </section>
 
-    <section class="proof" aria-label="Example">
-      <div class="sms">
-        <p class="from">GTBank</p>
-        <pre>Acct: 0******821
+    <!-- BANKS -->
+    <section class="banks" aria-label="Alert formats it reads">
+      <p>Tested on alert formats from</p>
+      <div class="marquee" aria-hidden="true">
+        <span>GTBank</span><span>Access</span><span>Zenith</span><span>UBA</span><span>First Bank</span><span>OPay</span><span>Moniepoint</span><span>PalmPay</span>
+        <span>GTBank</span><span>Access</span><span>Zenith</span><span>UBA</span><span>First Bank</span><span>OPay</span><span>Moniepoint</span><span>PalmPay</span>
+      </div>
+    </section>
+
+    <!-- THE INSIGHT -->
+    <section class="sec">
+      <div class="container">
+        <div class="center rv">
+          <p class="kicker">The one thing a fraudster never has</p>
+          <h2 class="h-lg">Every real alert continues your balance.</h2>
+          <p class="lede">Your balance after each alert is your last balance plus the amount. Fake-alert apps can copy the sender, the format and the amount. The balance is a guess, and arithmetic catches the guess.</p>
+        </div>
+        <div class="chain rv d1" aria-label="A balance chain where the last alert breaks">
+          <div class="link"><span class="pill g">8:14 · CR</span><div class="amt">+₦4,500</div><div class="bal">Bal ₦56,810.50</div></div>
+          <div class="link"><span class="pill g">8:52 · CR</span><div class="amt">+₦1,200</div><div class="bal">Bal ₦58,010.50</div></div>
+          <div class="link"><span class="pill a">9:30 · DR</span><div class="amt">−₦12,500</div><div class="bal">Bal ₦45,510.50</div></div>
+          <div class="link"><span class="pill g">10:05 · CR</span><div class="amt">+₦8,700</div><div class="bal">Bal ₦54,210.50</div></div>
+          <div class="link bad"><span class="pill r">11:22 · “CR”</span><div class="amt">+₦25,000</div><div class="bal">Says ₦264,870.20<br>Should be ₦79,210.50</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="sec" id="spot">
+      <div class="container">
+        <div class="center rv">
+          <p class="kicker">Play</p>
+          <h2 class="h-lg">Spot the fake alert</h2>
+          <p class="lede">Five real situations from the counter. Can you catch every fake before the goods leave the shop?</p>
+        </div>
+        <div class="game rv d1" id="game">
+          <div class="game-top"><span class="pill g">Round by round</span><span class="score" id="g-score"></span></div>
+          <div id="g-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="sec-tight">
+      <div class="container">
+        <div class="stats rv">
+          <div><b class="grad-text">0</b><span>invented-balance fakes released in our 70-alert test</span></div>
+          <div><b>10</b><span>alert formats read: SMS, app notifications and emails</span></div>
+          <div><b>₦0</b><span>per check when Gemma runs on your own laptop</span></div>
+          <div><b>100%</b><span>of your alerts stay on your device</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCT TOUR -->
+    <section class="sec" id="tour">
+      <div class="container">
+        <div class="center rv">
+          <p class="kicker">Everything at the counter</p>
+          <h2 class="h-lg">One screen. Five seconds. No wahala.</h2>
+        </div>
+        <div class="ptabs"><nav aria-label="Features">
+          <a href="#f-check" class="on">Alert check</a><a href="#f-shot">Screenshots</a><a href="#f-voice">Voice</a><a href="#f-book">Today’s book</a><a href="#f-offline">Offline</a>
+        </nav></div>
+
+        <div class="feature" id="f-check">
+          <div class="copy rv">
+            <span class="tag">Alert check</span>
+            <h3>Paste it, share it, or just let it land.</h3>
+            <p>Long-press the SMS and share it to Alertproof, or paste an alert or email. Gemma reads it, code checks every number, and the answer is big enough to see from across the counter.</p>
+            <ul><li><b>PAID</b>: the balance continues your chain to the kobo</li><li><b>NO RELEASE</b>: wrong balance, wrong account, or an old alert sent again</li><li><b>CAN’T TELL</b>: not enough to prove it, with what to check next</li></ul>
+            <a class="btn btn-ghost" href="app.html?demo">Try a fake alert <span class="arr">→</span></a>
+          </div>
+          <div class="visual rv d1">
+            <div class="ui">
+              <div class="ui-card"><div class="mono" style="white-space:pre-line;color:var(--muted)">Acct: 0******821
 Amt: NGN25,000.00 CR
-Desc: TRF FROM IBRAHIM MUSA
-Avail Bal: NGN264,870.20
-Date: 2026-10-17 11:22:00</pre>
+Avail Bal: NGN264,870.20</div></div>
+              <div class="ui-card" style="border-color:var(--stop);background:var(--stop-bg)"><div class="stamp-xl" style="color:var(--stop)">NO RELEASE</div><div style="color:var(--stop);font-size:14px">Should be ₦102,160.50. This alert says ₦264,870.20.</div></div>
+              <div class="ui-row" style="font-size:13px;color:var(--muted)"><span>✓ Your account (…4821)</span><span>✓ New reference</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature flip" id="f-shot">
+          <div class="copy rv">
+            <span class="tag">Screenshots</span>
+            <h3>“Screenshot no be money.”</h3>
+            <p>When a customer shows a “Transfer Successful” screen, Alertproof reads it and checks it was sent to <em>you</em>. Then it tells you exactly what your real alert must say. When that alert lands, it turns green by itself.</p>
+            <ul><li>Catches transfers sent to someone else’s account</li><li>Predicts your next balance to the kobo</li><li>Keeps a waiting list, so nobody walks off “pending”</li></ul>
+          </div>
+          <div class="visual rv d1">
+            <div class="ui">
+              <div class="ui-card"><div class="ui-row"><span class="pill a">WAIT FOR ALERT</span><b>₦15,000</b></div></div>
+              <div class="ui-card"><div style="font-size:14px;color:var(--muted)">If this is real, your next alert reads</div><div class="ui-big">CR ₦15,000</div><div class="mono" style="color:var(--brand)">Avail Bal ₦92,160.50</div></div>
+              <div class="ui-card"><div class="ui-row"><span>Blessing Udo</span><span class="pill g">✓ landed 11:31</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature" id="f-voice">
+          <div class="copy rv">
+            <span class="tag">Voice</span>
+            <h3>Your hands are busy. It talks.</h3>
+            <p>Every answer is spoken out loud, in English or in Pidgin, so you can keep bagging rice while it checks.</p>
+            <ul><li>“Money don land. Fifteen thousand naira don enter your account.”</li><li>“No release am. This alert no follow your balance.”</li><li>“Dem don use this alert before.”</li></ul>
+          </div>
+          <div class="visual rv d1">
+            <div class="ui center">
+              <div class="ui-card" style="display:grid;place-items:center;gap:14px;padding:28px">
+                <div class="wave" aria-hidden="true"><i style="animation-delay:-.1s"></i><i style="animation-delay:-.3s"></i><i style="animation-delay:-.5s"></i><i style="animation-delay:-.2s"></i><i style="animation-delay:-.6s"></i><i style="animation-delay:-.4s"></i><i style="animation-delay:-.7s"></i></div>
+                <div style="font-size:20px;font-weight:800">“No release am.”</div>
+                <div class="muted" style="font-size:14px">This alert no follow your balance.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature flip" id="f-book">
+          <div class="copy rv">
+            <span class="tag">Today’s book</span>
+            <h3>Close the day knowing every naira is real.</h3>
+            <p>Every checked alert goes into a day book: money that truly came in, who paid, which fakes were stopped, and whether your balance chain is unbroken.</p>
+            <ul><li>Proven inflow by transfer, per customer</li><li>Fakes blocked, with the reason</li><li>Export your book any time</li></ul>
+          </div>
+          <div class="visual rv d1">
+            <div class="ui">
+              <div class="ui-card"><div class="muted" style="font-size:13px">Proven in by transfer today</div><div class="ui-big grad-text">₦52,400</div></div>
+              <div class="ui-card">
+                <div class="ui-row"><span>Chidi Okafor <span class="pill g">PAID</span></span><b>+₦15,000</b></div>
+                <div class="ui-row"><span>Ibrahim Musa <span class="pill r">NO RELEASE</span></span><s class="muted">+₦25,000</s></div>
+                <div class="ui-row"><span>Emeka Nwosu <span class="pill g">PAID</span></span><b>+₦23,000</b></div>
+              </div>
+              <div class="ui-card" style="background:var(--paid-bg);color:var(--paid);font-weight:600;font-size:14px">Chain unbroken across 7 alerts.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature" id="f-offline">
+          <div class="copy rv">
+            <span class="tag">Offline &amp; private</span>
+            <h3>SMS still lands when data doesn’t.</h3>
+            <p>On a laptop with Gemma, Alertproof checks alerts with no internet at all. Your balance is the secret that protects you, so it never goes to anyone’s cloud.</p>
+            <ul><li>Open-weight Gemma runs on your own machine</li><li>Your book lives only on your device</li><li>On a phone? Online Gemma reads it, and nothing is stored</li></ul>
+            <a class="btn btn-ghost" href="security.html">How we protect you <span class="arr">→</span></a>
+          </div>
+          <div class="visual rv d1">
+            <div class="ui">
+              <div class="ui-card"><div class="ui-row"><span>📶 Network</span><span class="pill r">No data</span></div><div class="ui-row"><span>🧠 Gemma 3 · on this laptop</span><span class="pill g">Ready</span></div><div class="ui-row"><span>🔒 Alerts sent to cloud</span><b>0</b></div></div>
+              <div class="ui-card" style="border-color:var(--paid);background:var(--paid-bg)"><div class="stamp-xl" style="color:var(--paid)">PAID</div><div style="color:var(--paid);font-size:14px">Checked offline.</div></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="arrow" aria-hidden="true">→</div>
-      <div class="stampcard stop">
-        <b>NO RELEASE</b>
-        <p>After your last alert your balance was <strong>₦77,160.50</strong>. ₦25,000 in should make it <strong>₦102,160.50</strong>. This alert says <strong>₦264,870.20</strong>.</p>
+    </section>
+
+    <!-- TRICKS -->
+    <section class="sec">
+      <div class="container">
+        <div class="center rv">
+          <p class="kicker">Know the game</p>
+          <h2 class="h-lg">Four tricks. One answer.</h2>
+          <p class="lede">These are the fake-payment tricks traders talk about every day. Each one breaks a rule that arithmetic can check.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card trick rv"><span class="n">Trick 1 · Fake-alert apps</span><h3>The SMS that looks perfect</h3><blockquote>“Check your phone, e don enter.”</blockquote><p>Apps that send a bank-looking SMS with any amount you type. The words are perfect. The balance is invented.</p><p class="fix">→ Alertproof: the balance doesn’t follow your chain. NO RELEASE.</p></div>
+          <div class="card trick rv d1"><span class="n">Trick 2 · Edited screenshots</span><h3>“Transfer Successful”</h3><blockquote>“See am for my phone, I don send am.”</blockquote><p>A screenshot edited, reused, or of a transfer that later fails. It is a picture, not money.</p><p class="fix">→ Alertproof: wait for your own alert. It tells you exactly what it must say.</p></div>
+          <div class="card trick rv"><span class="n">Trick 3 · The old alert</span><h3>Yesterday’s money, again</h3><blockquote>“Abeg check your messages.”</blockquote><p>A real alert from earlier, forwarded or shown again to look like a new payment.</p><p class="fix">→ Alertproof: you already received this exact alert. NO RELEASE.</p></div>
+          <div class="card trick rv d1"><span class="n">Trick 4 · Wrong account</span><h3>Paid, just not to you</h3><blockquote>“Na your account number I use.”</blockquote><p>A genuine alert or receipt for somebody else’s account, often with a similar name.</p><p class="fix">→ Alertproof: this alert is for an account ending 432. Yours ends 4821.</p></div>
+        </div>
       </div>
     </section>
 
-    <section id="how">
-      <h2>How it works</h2>
-      <ol class="steps">
-        <li><h3>Your alerts become a chain</h3><p>Share or paste your own bank alerts, or type today’s balance from your bank app once. Every real alert’s balance follows from the one before it: last balance plus the amount.</p></li>
-        <li><h3>Gemma reads, code checks</h3><p>Every bank words alerts differently, and they keep changing. Gemma, an open model running on your laptop, reads any alert or receipt screenshot. Then plain code checks that every number Gemma read is really written in the alert. If it isn’t, the number is thrown away.</p></li>
-        <li><h3>Arithmetic decides</h3><p><b class="g">PAID</b> when the balance continues your chain exactly. <b class="r">NO RELEASE</b> when it doesn’t, when it’s for another account, or when it’s an old alert sent again. <b class="a">CAN’T TELL</b> when there isn’t enough to prove it, and it tells you what to check. The model never decides whether money is real.</p></li>
-        <li><h3>Screenshots are not money</h3><p>When a customer shows a “Transfer Successful” screenshot, Alertproof checks it was sent to <em>your</em> account, then tells you exactly what your next real alert must say: <em>“CR ₦15,000 · Avail Bal ₦92,160.50”</em>. When that alert lands, it turns green on its own.</p></li>
-      </ol>
+    <!-- WHY OPEN -->
+    <section class="sec">
+      <div class="container">
+        <div class="center rv">
+          <p class="kicker">Why open-weight AI</p>
+          <h2 class="h-lg">Your balance is the secret. So the AI comes to you.</h2>
+        </div>
+        <div class="grid-3">
+          <div class="card glow rv"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>Private by design</h3><p>The check works because nobody else knows your balance. Gemma runs on your laptop, so your alerts never go to someone else’s cloud.</p></div>
+          <div class="card glow rv d1"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 6.5C17 4.6 14.8 3.5 12 3.5S7 4.6 7 6.6c0 4.9 10 2.6 10 8 0 2-2.2 3.4-5 3.4s-5-1.2-5-3.2"/></svg></div><h3>₦0 per check</h3><p>No fee per alert, no API bill. That’s what makes a small monthly price work for a provisions stall.</p></div>
+          <div class="card glow rv d2"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg></div><h3>Ready when banks change</h3><p>Banks change alert formats all the time. With open weights we test every format ourselves, and can swap or fine-tune the model.</p></div>
+        </div>
+      </div>
     </section>
 
-    <section class="cols">
-      <div><h3>It says it out loud</h3><p>Your hands are busy at the counter. The answer is spoken in English or Pidgin: “No release am. This alert no follow your balance.”</p></div>
-      <div><h3>Today’s money, proven</h3><p>Every checked payment goes into a day book: what came in by transfer, from whom, which fakes were stopped, and whether your chain is unbroken.</p></div>
-      <div><h3>Works without data</h3><p>SMS alerts arrive when the internet doesn’t. On a laptop with Gemma, Alertproof checks alerts fully offline.</p></div>
+    <!-- HOW IT WORKS -->
+    <section class="sec">
+      <div class="container">
+        <div class="center rv"><p class="kicker">Start in two minutes</p><h2 class="h-lg">Three steps. Then it’s automatic.</h2></div>
+        <div class="grid-3">
+          <div class="card rv"><span class="pill g">Step 1</span><h3>Add your account</h3><p>Your account number and business name. They stay on your device.</p></div>
+          <div class="card rv d1"><span class="pill g">Step 2</span><h3>Set today’s balance</h3><p>Read it from your bank app once, or share a few of your own alerts. That starts the chain.</p></div>
+          <div class="card rv d2"><span class="pill g">Step 3</span><h3>Check every payment</h3><p>Share each alert as it lands. PAID, NO RELEASE or CAN’T TELL, spoken out loud.</p></div>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>Why it has to be an open model</h2>
-      <ul class="why">
-        <li><b>Your balance is the secret.</b> The whole check works because nobody else knows your balance. Sending every alert to someone else’s cloud would hand over the one thing that protects you. With Gemma on your own laptop, it never leaves.</li>
-        <li><b>Free to run, so cheap to sell.</b> A check costs nothing on your own machine, so a shop can pay a small monthly fee instead of a fee per alert.</li>
-        <li><b>Banks change their formats.</b> With open weights we can test every new format ourselves, swap models, or fine-tune one on Nigerian alerts. A closed API can change under you.</li>
-      </ul>
-    </section>
-
-    <section id="limits">
-      <h2>What it can’t do</h2>
-      <ul class="why">
-        <li>It needs a starting point: your balance from the bank app, or your own recent alerts. Until then every answer is CAN’T TELL, never PAID.</li>
-        <li>If you miss an alert (a charge, a debit), the chain breaks. Alertproof says so and asks you to set your balance again; it doesn’t guess.</li>
-        <li>Someone who has seen your latest alert knows your balance. Keep your alerts private.</li>
-        <li>Gemma on a laptop with no graphics card takes about half a minute per alert. Online Gemma takes seconds, but the alert text goes to Google’s hosted Gemma (nothing is stored).</li>
-      </ul>
+    <!-- CTA -->
+    <section class="sec-tight">
+      <div class="container">
+        <div class="band rv">
+          <h2>Don’t release the goods on a guess.</h2>
+          <p>Open the demo shop and play five customers: a real transfer, a fake alert, a replay, a wrong account and a screenshot.</p>
+          <div class="btns"><a class="btn btn-dark" href="app.html?demo">Try the demo shop <span class="arr">→</span></a><a class="btn btn-line btn-ghost" style="background:transparent" href="how-it-works.html">See how it works</a></div>
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer class="foot">
-    <p>Alertproof is open source (MIT). Built with Gemma for the Hacktoberfest Open-Source AI Challenge.</p>
-  </footer>
+  <footer id="site-foot"></footer>
+  <script src="assets/site.js" defer></script>
 </body>
 </html>
