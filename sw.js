@@ -1,7 +1,7 @@
 // Cache the site and app so every page opens instantly and the app works with no data:
 // SMS still arrives when the internet doesn't.
 // Cached copy first (instant), refreshed in the background for next time.
-const CACHE = 'alertproof-v4';
+const CACHE = 'alertproof-v6';
 const SHELL = [
   './', 'index.html', 'app.html', 'product.html', 'how-it-works.html', 'pricing.html', 'security.html', 'faq.html', 'about.html', 'app.js', 'manifest.webmanifest',
   'lib/money.js', 'lib/ground.js', 'lib/chain.js', 'lib/fingerprint.js', 'lib/prompts.js', 'lib/read.js', 'lib/model.js',
@@ -23,7 +23,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.includes('/api/')) return;
   e.respondWith(caches.open(CACHE).then(async c => {
-    const hit = await c.match(e.request, { ignoreSearch: true });
+    const hit = await c.match(e.request, { ignoreSearch: e.request.mode === 'navigate' });
     const fresh = fetch(e.request).then(res => { if (res.ok) c.put(e.request, res.clone()); return res; }).catch(() => hit);
     if (hit) { e.waitUntil(fresh); return hit; }
     return fresh;
