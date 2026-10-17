@@ -1,6 +1,0 @@
-1-maple.jpg: "Maple leaf held up in autumn, Vieux-Limoilou.jpg" by Wilfredor, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Maple_leaf_held_up_in_autumn,_Vieux-Limoilou.jpg
-2-oak.jpg: "Dülmen, Wildpark, Eiche am Herzteich -- 2022 -- 4616.jpg" by Dietmar Rabich, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Wildpark,_Eiche_am_Herzteich_--_2022_--_4616.jpg
-3-light.jpg: "Grib skov.jpg" by Malene Thyssen, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:Grib_skov.jpg
-4-slug.jpg: "Schwarzer-Schnegel-Limax-cinereoniger.JPG" by Holger Krisp, CC BY 3.0, https://commons.wikimedia.org/wiki/File:Schwarzer-Schnegel-Limax-cinereoniger.JPG
-5-squirrel.jpg: "Red squirrel (Sciurus vulgaris fuscoater) black variant Meidling 2.jpg" by Charles J. Sharp, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Red_squirrel_(Sciurus_vulgaris_fuscoater)_black_variant_Meidling_2.jpg
-6-sky.jpg: "Hain Eiche Herbst 121696.jpg" by Ermell, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Hain_Eiche_Herbst_121696.jpg

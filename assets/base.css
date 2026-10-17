@@ -1,53 +1,39 @@
-/* Touch Grass, Not Glass: shared design tokens */
-@font-face { font-family: 'Fraunces'; src: url('fonts/fraunces.woff2') format('woff2'); font-weight: 300 600; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Fraunces'; src: url('fonts/fraunces-italic.woff2') format('woff2'); font-weight: 300 500; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Inter'; src: url('fonts/inter.woff2') format('woff2'); font-weight: 400 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('fonts/inter.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'Fraunces'; src: url('fonts/fraunces.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
 
 :root {
-  --paper: #f4efe6;
-  --paper-2: #ebe4d6;
-  --card: #fbf8f2;
-  --ink: #1f2a1f;
-  --ink-2: #47503f;
-  --muted: #7a7a68;
-  --line: #ddd4c2;
-  --moss: #4a5d3a;
-  --moss-2: #6f8456;
-  --clay: #b5643c;
-  --night: #0c0d0a;
-  --night-2: #16180f;
-  --amber: #d6b06a;
-  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --radius: 18px;
-  --ease: cubic-bezier(.2, .7, .2, 1);
+  --bg: #f6f3ec;
+  --paper: #fffdf8;
+  --ink: #17201b;
+  --muted: #5d675f;
+  --line: #e2dccf;
+  --brand: #0f6b3e;
+  --brand-ink: #ffffff;
+  --paid: #0f7a43;
+  --paid-bg: #e3f4e9;
+  --stop: #b3261e;
+  --stop-bg: #fbe5e3;
+  --wait: #8a5a00;
+  --wait-bg: #fdf1d8;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(23, 32, 27, .06), 0 6px 24px rgba(23, 32, 27, .06);
+  color-scheme: light;
 }
 
-* { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
-img { max-width: 100%; display: block; }
-a { color: inherit; }
-[hidden] { display: none !important; }
-:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; border-radius: 6px; }
-
-.serif { font-family: var(--serif); }
-.eyebrow { font: 600 .72rem/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
-  font: 500 .98rem/1 var(--sans); text-decoration: none; cursor: pointer;
-  padding: 15px 24px; border-radius: 999px; border: 1px solid transparent;
-  transition: transform .2s var(--ease), background .2s, border-color .2s, color .2s;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a14; --paper: #16241c; --ink: #eef3ee; --muted: #a2b0a6; --line: #2a3a30;
+    --brand: #37b26c; --brand-ink: #06140c;
+    --paid: #5fd394; --paid-bg: #12331f; --stop: #ff8a80; --stop-bg: #3a1714; --wait: #f0c065; --wait-bg: #33280f;
+    --shadow: none; color-scheme: dark;
+  }
 }
-.btn:active { transform: scale(.98); }
-.btn-primary { background: var(--ink); color: var(--paper); }
-.btn-primary:hover { background: var(--moss); }
-.btn-ghost { border-color: var(--line); color: var(--ink); background: transparent; }
-.btn-ghost:hover { border-color: var(--ink-2); }
-.btn:disabled { opacity: .55; cursor: progress; }
 
-.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 500 1.05rem/1 var(--serif); letter-spacing: -.01em; }
-.logo svg { width: 28px; height: 28px; }
-
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Inter, system-ui, sans-serif; }
+h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; line-height: 1.15; letter-spacing: -.01em; }
+a { color: var(--brand); }
+button, input, textarea { font: inherit; color: inherit; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; background: var(--line); padding: 0 .3em; border-radius: 4px; }
+img { max-width: 100%; }

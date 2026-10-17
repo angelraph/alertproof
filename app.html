@@ -3,145 +3,122 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4efe6">
-  <title>Camera · Touch Grass, Not Glass</title>
-  <meta name="description" content="The camera that only works outside.">
+  <title>Alertproof</title>
+  <meta name="description" content="Check a bank alert before you hand over the goods. Gemma reads it on your own device; your balance decides.">
+  <meta name="theme-color" content="#0f1a14">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/icon-192.png" type="image/png">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-<div class="app">
+  <header class="bar">
+    <a class="brand" href="./"><img src="assets/icon.svg" alt="" width="28" height="28"><span>Alertproof</span></a>
+    <button id="engine" class="pill" type="button" title="Where Gemma is running">Checking…</button>
+  </header>
 
-  <!-- TODAY -->
-  <section id="today" class="view">
-    <header class="topbar">
-      <a class="logo" href="./" aria-label="About Touch Grass">
-        <img src="assets/mark-96.png" alt="" width="36" height="36">
-      </a>
-      <span id="modelPill" class="pill" title="Local AI status">checking…</span>
-    </header>
-
-    <p id="greeting" class="greeting">Good day.</p>
-    <div class="hero-stat">
-      <span id="awayMin" class="big-num">0</span>
-      <span class="big-label">min away<br>from the screen</span>
-    </div>
-    <p id="awaySub" class="sub">Your first walk is waiting.</p>
-
-    <div id="intro" class="intro" hidden>
-      <p class="eyebrow">First time here?</p>
-      <ol>
-        <li><b>Load film</b> to get six small things to find.</li>
-        <li><b>Go outside.</b> The screen goes dark. Read one mission, put the phone away, look.</li>
-        <li><b>Found it?</b> Tap "I found it" and take one photo.</li>
-        <li><b>Back home,</b> Gemma on your computer develops the photos into a field journal.</li>
-      </ol>
-      <button id="introOk" class="btn btn-ghost btn-sm">Got it</button>
-    </div>
-
-    <div class="roll-card">
-      <p class="eyebrow">Today's roll</p>
-      <h2>Six small things<br>to find outside.</h2>
-      <p class="where-label">Where are you heading?</p>
-      <div class="chips" role="radiogroup" aria-label="Destination">
-        <button class="chip on" role="radio" aria-checked="true" data-place="a city park">Park</button>
-        <button class="chip" role="radio" aria-checked="false" data-place="a forest trail">Trail</button>
-        <button class="chip" role="radio" aria-checked="false" data-place="a backyard or garden">Garden</button>
-        <button class="chip" role="radio" aria-checked="false" data-place="city streets">Streets</button>
-        <button class="chip" role="radio" aria-checked="false" data-place="a beach or riverbank">Water</button>
-      </div>
-      <button id="loadRoll" class="btn btn-primary wide">Load film <span aria-hidden="true">→</span></button>
-      <p id="loadStatus" class="status" aria-live="polite"></p>
-    </div>
-
-    <button id="openSample" class="sample-link">No walk yet? See a real roll developed by Gemma <span aria-hidden="true">→</span></button>
-
-    <div id="darkroomCard" class="darkroom-card" hidden>
-      <div>
-        <p class="eyebrow">In the darkroom</p>
-        <p id="darkroomText" class="darkroom-text"></p>
-      </div>
-      <button id="openDarkroom" class="btn btn-ghost btn-sm">Develop</button>
-    </div>
-  </section>
-
-  <!-- READY -->
-  <section id="ready" class="view view-dim" hidden>
-    <div class="center">
-      <span class="glyph" aria-hidden="true">◇</span>
-      <p class="eyebrow light">Film loaded</p>
-      <h2 class="ready-title">Six quests are waiting.<br>You'll see one at a time.</h2>
-      <p class="ready-sub">Read the quest, put the phone in your pocket, and look. Take it out again only when you've found it.</p>
-      <p id="readyAuthor" class="tiny"></p>
-      <button id="startWalk" class="btn btn-amber wide">Start walking</button>
-      <button id="cancelRoll" class="link">not now</button>
-    </div>
-  </section>
-
-  <!-- FIELD -->
-  <section id="field" class="view view-field" hidden>
-    <div class="frames" id="frameDots" aria-hidden="true"></div>
-    <div class="center">
-      <span class="glyph" aria-hidden="true">◇</span>
-      <p id="questText" class="quest"></p>
-      <p class="hint">Listen first. Look slowly.</p>
-      <label class="btn btn-found" id="foundBtn">
-        I found it
-        <input id="shutter" type="file" accept="image/*" capture="environment" hidden>
-      </label>
-      <button id="skip" class="link">skip this one</button>
-    </div>
-    <p id="saved" class="saved" aria-live="polite"></p>
-    <button id="endRoll" class="link end">end walk</button>
-  </section>
-
-  <!-- DONE -->
-  <section id="done" class="view view-dim" hidden>
-    <div class="center">
-      <p class="eyebrow light">Walk complete</p>
-      <p class="done-num"><span id="doneMin">0</span><small>min outside</small></p>
-      <p id="doneGlass" class="done-glass"></p>
-      <p class="ready-sub">Your roll stays undeveloped until you're home. Open it on the computer running your AI and tap <b>Develop</b>.</p>
-      <button id="toJournal" class="btn btn-amber wide">Open the roll</button>
-    </div>
-  </section>
-
-  <!-- JOURNAL -->
-  <section id="journal" class="view" hidden>
-    <header class="topbar">
-      <h1 class="page-title">My field journal</h1>
-    </header>
-    <div id="statRow" class="stat-row"></div>
-    <div id="rollList" class="roll-list"></div>
-    <label class="btn btn-ghost btn-sm import">Import a roll<input id="importRoll" type="file" accept=".json,application/json" hidden></label>
-  </section>
-
-  <!-- SETTINGS -->
-  <section id="settings" class="view" hidden>
-    <header class="topbar"><h1 class="page-title">Settings</h1></header>
-    <div class="setting-group">
-      <label>Local AI address<input id="ollamaUrl" type="url" inputmode="url" autocomplete="off"></label>
-      <label>Model<input id="model" type="text" autocomplete="off" spellcheck="false"></label>
-      <label class="toggle"><input id="useOnline" type="checkbox"> Use the online darkroom when there's no Gemma on this computer</label>
-      <p id="ollamaHealth" class="status"></p>
-      <p class="help">Any open-weight vision model in Ollama works: <code>gemma3:4b</code>, <code>gemma3:12b</code>, <code>gemma3n</code>, <code>llava</code>. See the <a href="docs.html">docs</a> for setup.</p>
-    </div>
-    <div class="setting-group">
-      <p class="help">Everything lives on this device. Nothing is uploaded, ever.</p>
-      <a class="btn btn-ghost btn-sm" href="./">About this app</a>
-    </div>
-  </section>
-
-  <nav id="tabbar" class="tabbar" aria-label="App">
-    <button data-tab="today" class="on">Today</button>
-    <button data-tab="journal">Journal</button>
-    <button data-tab="settings">Settings</button>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="check" aria-selected="true">Check</button>
+    <button role="tab" data-tab="today">Today</button>
+    <button role="tab" data-tab="setup">Setup</button>
   </nav>
-</div>
-<script type="module" src="app.js"></script>
+
+  <main>
+    <!-- CHECK -->
+    <section id="tab-check" class="tab">
+      <div id="demo-bar" class="demo" hidden>
+        <p><strong>Demo shop:</strong> Ngozi Eze Provisions, a GTBank account ending 4821 with six real-format alerts from this morning already in its book. Try a customer:</p>
+        <div class="chips">
+          <button data-demo="real">Real transfer</button>
+          <button data-demo="fake">Fake alert</button>
+          <button data-demo="replay">Old alert sent again</button>
+          <button data-demo="wrongacct">Someone else's account</button>
+          <button data-demo="shot">Customer shows a screenshot</button>
+        </div>
+      </div>
+
+      <div id="setup-nudge" class="nudge" hidden>
+        Add your account number and today's balance in <button class="link" data-goto="setup">Setup</button> first. Then every alert can be checked.
+      </div>
+
+      <label class="field">
+        <span>Paste the alert that just came in</span>
+        <textarea id="alert-text" rows="6" placeholder="Acct: 0******821&#10;Amt: NGN15,000.00 CR&#10;Desc: TRF FROM CHIDI OKAFOR&#10;Avail Bal: NGN87,450.20&#10;…"></textarea>
+      </label>
+      <div class="row">
+        <button id="check-btn" class="primary" type="button">Check alert</button>
+        <label class="secondary file">
+          <input id="shot-input" type="file" accept="image/*" hidden>
+          Customer screenshot
+        </label>
+      </div>
+
+      <div id="result" aria-live="polite"></div>
+
+      <div id="waiting"></div>
+    </section>
+
+    <!-- TODAY -->
+    <section id="tab-today" class="tab" hidden>
+      <div id="today"></div>
+    </section>
+
+    <!-- SETUP -->
+    <section id="tab-setup" class="tab" hidden>
+      <h2>Your account</h2>
+      <p class="hint">Alertproof checks every alert against this account and its balance. It stays on this device.</p>
+      <label class="field"><span>Business name (as it shows on transfers)</span><input id="biz" autocomplete="organization" placeholder="e.g. Ngozi Eze Provisions"></label>
+      <label class="field"><span>Account number</span><input id="acct" inputmode="numeric" maxlength="10" placeholder="10 digits"></label>
+      <label class="field"><span>Bank or app</span><input id="bank" placeholder="e.g. GTBank, OPay, Moniepoint"></label>
+      <button id="save-acct" class="primary" type="button">Save account</button>
+
+      <h2>Balance right now</h2>
+      <p class="hint">Open your bank app, read your available balance, and type it here. This starts the chain. Do it again any time an alert is missed.</p>
+      <div class="row">
+        <label class="field grow"><span>Available balance (₦)</span><input id="anchor" inputmode="decimal" placeholder="e.g. 72,450.20"></label>
+        <button id="save-anchor" class="secondary" type="button">Set balance</button>
+      </div>
+      <p id="anchor-note" class="hint"></p>
+
+      <h2>Teach it your alerts</h2>
+      <p class="hint">Paste a few of your own recent alerts, credits and debits, oldest first. Put <code>---</code> between them. Alertproof learns how your bank writes them and checks your chain has no gaps. On Android you can also share an SMS straight to Alertproof.</p>
+      <textarea id="teach-text" rows="6" placeholder="Paste your alerts, separated by ---"></textarea>
+      <button id="teach-btn" class="secondary" type="button">Read and add to my book</button>
+      <div id="teach-out"></div>
+
+      <h2>Where Gemma runs</h2>
+      <label class="check"><input type="radio" name="engine" value="local"> On this computer (Ollama). Private, works offline.</label>
+      <div class="row indent">
+        <label class="field grow"><span>Ollama address</span><input id="ollama-base" value="http://localhost:11434"></label>
+        <label class="field grow"><span>Model</span><input id="ollama-model" value="gemma3:4b"></label>
+      </div>
+      <label class="check"><input type="radio" name="engine" value="online"> Online Gemma 4. For phones without a laptop: the alert text is sent to Google's hosted Gemma, nothing is stored.</label>
+      <label class="check"><input type="radio" name="engine" value="auto" checked> Automatic: this computer if Gemma is here, otherwise online.</label>
+
+      <h2>Voice</h2>
+      <label class="check"><input id="speak" type="checkbox" checked> Read the answer out loud</label>
+      <label class="check"><input id="pidgin" type="checkbox"> In Pidgin</label>
+
+      <h2>Your data</h2>
+      <div class="row">
+        <button id="export" class="secondary" type="button">Export my book</button>
+        <button id="wipe" class="danger" type="button">Delete everything</button>
+      </div>
+    </section>
+  </main>
+
+  <template id="tpl-result">
+    <article class="verdict">
+      <header><span class="stamp"></span><span class="amount"></span></header>
+      <p class="say"></p>
+      <ul class="checks"></ul>
+      <div class="looks"></div>
+      <details class="read"><summary>What Gemma read</summary><dl></dl><p class="meta"></p></details>
+      <div class="actions"></div>
+    </article>
+  </template>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>

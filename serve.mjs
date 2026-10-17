@@ -18,4 +18,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end('not found');
   }
-}).listen(port, () => console.log(`Touch Grass on http://localhost:${port}`));
+}).listen(port, () => console.log(`Alertproof on http://localhost:${port}`));

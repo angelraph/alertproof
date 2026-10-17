@@ -1,46 +1,48 @@
-# Touch Grass, Not Glass
+# Alertproof
 
-A camera that only works outside.
+**A fake alert can copy your bank's words. It can't know your balance.**
 
-You get six small things to find. The screen goes dark while you look for them. When you get home, an open model running on your own computer develops your photos into a little field journal.
+Alertproof checks a bank alert before a trader hands over the goods. Gemma, an open-weight model, reads the alert (any bank's SMS, app notification or email, or a customer's "Transfer Successful" screenshot) on the trader's own device. Then plain code decides:
 
-Try it at https://touch-grass-not-glass.vercel.app or read the docs at https://touch-grass-not-glass.vercel.app/docs.html
+- **Grounding** (`lib/ground.js`): every number Gemma read must be written in the alert. Anything else is thrown away, and Gemma is asked once more, told which values were wrong.
+- **The balance chain** (`lib/chain.js`): each genuine alert's balance equals the last balance plus the amount. A fraudster can fake the sender, the wording and the amount, but not the trader's balance.
+- **Format fingerprint** (`lib/fingerprint.js`): how the trader's real alerts are written (labels, currency, date shape). This is supporting evidence only.
 
-I built this for the [DEV Hacktoberfest 2026 Open-Source AI Challenge](https://dev.to/challenges/hacktoberfest-week1-2026-10-05), week 1, Touch Grass.
+The verdict is one of three:
 
-## How it works
+| Verdict | When |
+|---|---|
+| **PAID** | The balance continues the chain exactly, the account matches, and the alert hasn't been seen before. |
+| **NO RELEASE** | The balance breaks the chain, the alert is for another account, it's a debit, or it's an old alert sent again. |
+| **CAN'T TELL** | There isn't enough to prove it: no starting balance, no balance on the alert, or a likely missed bank charge. |
 
-At home you load the film. You pick where you're going, and Gemma 3 (running locally through [Ollama](https://ollama.com)) writes six quests that fit the month, the time of day and the place.
+The model never decides whether money is real.
 
-Outside, the screen goes nearly black. You see one quest at a time, it gets read out loud, and there's a single "I found it" button. No preview and no feed. It works with no signal at all.
+## Try it
 
-Back home you develop the roll. Gemma looks at each photo, writes down what it actually sees, then decides whether you found what you were looking for. Each frame gets a title and a short field note.
+- Live: https://alertproof.vercel.app (demo shop: `/app.html?demo`)
+- Locally: `node serve.mjs`, then open http://localhost:5173
 
-The app only keeps one number: how long the screen was off during your walk.
+For the private, offline setup, install [Ollama](https://ollama.com) and run `ollama pull gemma3:4b`. Alertproof finds it automatically. Without it, Alertproof can use Gemma 4 hosted by Google through `api/read.js` (set `GEMMA_API_KEY`).
 
-You don't need to install anything to try it. If your computer doesn't run Gemma, the hosted site uses an online darkroom: Gemma 4, the newest open Gemma, with the same prompts, hosted by Google, through a small serverless function (api/gemma.js). If Gemma runs on your own computer, the app uses that instead and your photos never leave your devices.
-
-## Running it
-
-You need Ollama and the Gemma 3 model:
+## Tests and evaluation
 
 ```bash
-ollama pull gemma3:4b
-npm start
+npm test                         # unit tests for money, grounding, chain, fingerprint
+node eval/run.mjs gemma3:4b      # 70 real and fake alerts across 10 formats -> eval/EVAL.md
+node eval/record-demo.mjs        # re-record the demo shop's Gemma readings
 ```
 
-Then open http://localhost:5173. There are no npm dependencies, and you don't need a graphics card. On a laptop CPU it takes about two minutes to develop each photo, so it's a good moment to make tea.
+## Files
 
-The docs explain how to walk with your phone and develop on your computer, how to pick a different model, and what to do if something doesn't connect.
+| File | What it does |
+|---|---|
+| `app.html`, `app.js` | The counter screen: check, today's book, setup. Speaks the verdict in English or Pidgin. |
+| `lib/prompts.js` | The extraction schema and prompts, shared by every path. |
+| `lib/model.js`, `api/read.js` | Gemma on this computer (Ollama), or hosted Gemma 4. |
+| `lib/store.js` | IndexedDB. Nothing leaves the device. |
+| `lib/formats.js` | Alert formats for the eval and demo. |
 
-## Why an open model
+There are no npm dependencies.
 
-The whole thing depends on it. The walking part has to work where there's no signal, the photos shouldn't end up on someone else's server, it should cost nothing to run, and I wanted to be able to swap the model or change the prompts whenever I like. All of that is easy when the model runs on your own machine.
-
-## Where things are
-
-The landing page is index.html and the docs are docs.html. The camera is app.html and app.js. The two Gemma prompts are in ollama.js. Rolls are saved in the browser by store.js, and sw.js is the service worker that keeps the app working offline. Styles, fonts and the sample roll are in the assets folder.
-
-## Credits
-
-The sample photos come from Wikimedia Commons under Creative Commons licences, by Wilfredor, Dietmar Rabich, Malene Thyssen, Holger Krisp, Charles J. Sharp and Ermell (details in assets/samples/CREDITS.txt). The fonts are Fraunces and Inter, both under the SIL Open Font License. The code is MIT licensed.
+MIT licence.

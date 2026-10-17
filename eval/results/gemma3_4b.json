@@ -1,0 +1,531 @@
+[
+ {
+  "id": "gtbank_sms/genuine",
+  "fmt": "gtbank_sms",
+  "kind": "genuine",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 34518,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "CR",
+   "amount": 1250000,
+   "balance": 10010156,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000001",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 1250000,
+   "balance": 10010156,
+   "direction": "CR",
+   "tail": "821",
+   "ref": "200000000001"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/genuine-kobo",
+  "fmt": "gtbank_sms",
+  "kind": "genuine-kobo",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 40927,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "CR",
+   "amount": 737550,
+   "balance": 9497706,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000002",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 737550,
+   "balance": 9497706,
+   "direction": "CR",
+   "tail": "821",
+   "ref": "200000000002"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/debit",
+  "fmt": "gtbank_sms",
+  "kind": "debit",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 38526,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "DR",
+   "amount": 300000,
+   "balance": 8460156,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000003",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 300000,
+   "balance": 8460156,
+   "direction": "DR",
+   "tail": "821",
+   "ref": "200000000003"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/fake-balance",
+  "fmt": "gtbank_sms",
+  "kind": "fake-balance",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 41126,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "CR",
+   "amount": 2500000,
+   "balance": 25002156,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000004",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 2500000,
+   "balance": 25002156,
+   "direction": "CR",
+   "tail": "821",
+   "ref": "200000000004"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/fake-round",
+  "fmt": "gtbank_sms",
+  "kind": "fake-round",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 40131,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "CR",
+   "amount": 5000000,
+   "balance": 25000000,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000005",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 5000000,
+   "balance": 25000000,
+   "direction": "CR",
+   "tail": "821",
+   "ref": "200000000005"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/wrong-account",
+  "fmt": "gtbank_sms",
+  "kind": "wrong-account",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 39213,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "Acct",
+   "direction": "CR",
+   "amount": 1800000,
+   "balance": 10560156,
+   "account_tail": "432",
+   "counterparty": "KELECHI OBI",
+   "reference": "200000000006",
+   "time": "2026-10-17 14:16:00"
+  },
+  "truth": {
+   "amount": 1800000,
+   "balance": 10560156,
+   "direction": "CR",
+   "tail": "432",
+   "ref": "200000000006"
+  },
+  "error": null
+ },
+ {
+  "id": "gtbank_sms/replay",
+  "fmt": "gtbank_sms",
+  "kind": "replay",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 39859,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 420085,
+   "balance": 4420085,
+   "account_tail": "821",
+   "counterparty": "FUNKE AKINDELE/467695944647",
+   "reference": "467695944647",
+   "time": "2026-10-17 07:50:00"
+  },
+  "truth": {
+   "amount": 420085,
+   "balance": 4420085,
+   "direction": "CR",
+   "tail": "821",
+   "ref": "467695944647"
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/genuine",
+  "fmt": "access_sms",
+  "kind": "genuine",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 34821,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 1250000,
+   "balance": 5113251,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "TRF",
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 1250000,
+   "balance": 5113251,
+   "direction": "CR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/genuine-kobo",
+  "fmt": "access_sms",
+  "kind": "genuine-kobo",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 38502,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 737550,
+   "balance": 4600801,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "TRFFROMKELECHIOBI",
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 737550,
+   "balance": 4600801,
+   "direction": "CR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/debit",
+  "fmt": "access_sms",
+  "kind": "debit",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 33756,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "DR",
+   "amount": 300000,
+   "balance": 3563251,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": null,
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 300000,
+   "balance": 3563251,
+   "direction": "DR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/fake-balance",
+  "fmt": "access_sms",
+  "kind": "fake-balance",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 33851,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 2500000,
+   "balance": 20105251,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "TRF",
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 2500000,
+   "balance": 20105251,
+   "direction": "CR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/fake-round",
+  "fmt": "access_sms",
+  "kind": "fake-round",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 33744,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 5000000,
+   "balance": 25000000,
+   "account_tail": "821",
+   "counterparty": "KELECHI OBI",
+   "reference": "TRF",
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 5000000,
+   "balance": 25000000,
+   "direction": "CR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/wrong-account",
+  "fmt": "access_sms",
+  "kind": "wrong-account",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 34116,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 1800000,
+   "balance": 5663251,
+   "account_tail": "432",
+   "counterparty": "KELECHI OBI",
+   "reference": "TRF",
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 1800000,
+   "balance": 5663251,
+   "direction": "CR",
+   "tail": "432",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "access_sms/replay",
+  "fmt": "access_sms",
+  "kind": "replay",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 33367,
+  "tries": 1,
+  "rejected": [],
+  "firstRejected": [],
+  "reading": {
+   "bank": "",
+   "direction": "CR",
+   "amount": 150000,
+   "balance": 4223145,
+   "account_tail": "821",
+   "counterparty": "EMEKA NWOSU",
+   "reference": null,
+   "time": "17/10/2026"
+  },
+  "truth": {
+   "amount": 150000,
+   "balance": 4223145,
+   "direction": "CR",
+   "tail": "821",
+   "ref": null
+  },
+  "error": null
+ },
+ {
+  "id": "zenith_sms/genuine",
+  "fmt": "zenith_sms",
+  "kind": "genuine",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 77660,
+  "tries": 2,
+  "rejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "firstRejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "reading": {
+   "bank": "NIP/KELECHI OBI",
+   "direction": "CR",
+   "amount": 1250000,
+   "balance": 17556117,
+   "account_tail": null,
+   "counterparty": "KELECHI OBI",
+   "reference": "200000002001",
+   "time": "17/10/2026 16:10:00"
+  },
+  "truth": {
+   "amount": 1250000,
+   "balance": 17556117,
+   "direction": "CR",
+   "tail": null,
+   "ref": "200000002001"
+  },
+  "error": null
+ },
+ {
+  "id": "zenith_sms/genuine-kobo",
+  "fmt": "zenith_sms",
+  "kind": "genuine-kobo",
+  "expect": "PAID",
+  "verdict": "PAID",
+  "ms": 79908,
+  "tries": 2,
+  "rejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "firstRejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "reading": {
+   "bank": "NIP/KELECHI OBI",
+   "direction": "CR",
+   "amount": 737550,
+   "balance": 17043667,
+   "account_tail": null,
+   "counterparty": "KELECHI OBI",
+   "reference": "200000002002",
+   "time": "17/10/2026 16:10:00"
+  },
+  "truth": {
+   "amount": 737550,
+   "balance": 17043667,
+   "direction": "CR",
+   "tail": null,
+   "ref": "200000002002"
+  },
+  "error": null
+ },
+ {
+  "id": "zenith_sms/debit",
+  "fmt": "zenith_sms",
+  "kind": "debit",
+  "expect": "NO RELEASE",
+  "verdict": "NO RELEASE",
+  "ms": 82046,
+  "tries": 2,
+  "rejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "firstRejected": [
+   {
+    "field": "account_tail",
+    "value": "21",
+    "why": "not written in the alert"
+   }
+  ],
+  "reading": {
+   "bank": "NIP/KELECHI OBI",
+   "direction": "DR",
+   "amount": 300000,
+   "balance": 16006117,
+   "account_tail": null,
+   "counterparty": "KELECHI OBI",
+   "reference": "200000002003",
+   "time": "17/10/2026 16:10:00"
+  },
+  "truth": {
+   "amount": 300000,
+   "balance": 16006117,
+   "direction": "DR",
+   "tail": null,
+   "ref": "200000002003"
+  },
+  "error": null
+ }
+]

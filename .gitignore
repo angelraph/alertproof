@@ -1,12 +1,7 @@
 node_modules/
 *.log
 .claude/
-roll-*.json
-POST.md
-.vercel
-
 .vercel
 .env*
-_ref/
-touch-grass-demo.mp4
-touch-grass-film.mp4
+eval/private/
+POST-notes.md

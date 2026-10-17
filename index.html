@@ -3,184 +3,88 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4efe6">
-  <title>Touch Grass, Not Glass: the camera that only works outside</title>
-  <meta name="description" content="Six small things to find. The screen goes dark. You go look. Back home, an open-weight AI on your own computer develops your roll into a field journal.">
-  <meta property="og:title" content="Touch Grass, Not Glass">
-  <meta property="og:description" content="The camera that only works outside. Open-weight Gemma develops your roll at home, on your own machine.">
-  <meta property="og:image" content="https://touch-grass-not-glass.vercel.app/assets/icon-512.png">
-  <link rel="icon" href="assets/icon-192.png" type="image/png">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <title>Alertproof</title>
+  <meta name="description" content="Fake alerts can copy your bank's words. They can't know your balance. Alertproof checks every alert against your own balance chain before you hand over the goods.">
+  <meta name="theme-color" content="#0f6b3e">
+  <meta property="og:title" content="Alertproof: check the alert before you release the goods">
+  <meta property="og:description" content="A fake alert can copy your bank's words. It can't know your balance.">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/site.css">
 </head>
-<body class="landing">
-  <header class="nav">
-    <a class="logo" href="./" aria-label="Touch Grass, Not Glass home">
-      <img src="assets/mark-96.png" alt="" width="34" height="34">
-      <span>Touch Grass<span class="logo-tail">, <em>Not Glass</em></span></span>
-    </a>
-    <nav class="nav-links" aria-label="Primary">
-      <a href="#try">Try it</a>
-      <a href="#film">Film</a>
-      <a href="#story">How it works</a>
-      <a href="#faq">FAQ</a>
-      <a href="docs.html">Docs</a>
-    </nav>
-    <a class="btn btn-primary btn-sm" href="app.html">Open the camera</a>
+<body>
+  <header class="top">
+    <a class="brand" href="./"><img src="assets/icon.svg" alt="" width="30" height="30">Alertproof</a>
+    <nav><a href="#how">How it works</a><a href="#limits">Limits</a><a href="https://github.com/angelraph/alertproof">Code</a></nav>
   </header>
 
   <main>
-    <!-- HERO -->
     <section class="hero">
-      <div class="seeds" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="hero-copy">
-        <p class="eyebrow rise" style="--d:0">Open-source AI · on your own machine</p>
-        <h1 class="rise" style="--d:1">The camera that<br>only works <em>outside.</em></h1>
-        <p class="lede rise" style="--d:2">Six small things to find. The screen goes dark. You go and look. Back home, an AI on your own computer develops your roll.</p>
-        <div class="hero-cta rise" style="--d:3">
-          <a class="btn btn-primary" href="app.html">Open the camera <span aria-hidden="true">→</span></a>
-          <a class="btn btn-ghost" href="#story">How it works</a>
-        </div>
+      <p class="kicker">For traders, POS agents and anyone paid by transfer</p>
+      <h1>A fake alert can copy your bank’s words. <em>It can’t know your balance.</em></h1>
+      <p class="lede">The customer says “I don send am”, the phone buzzes, and you have five seconds to decide whether to hand over the goods. Alertproof reads the alert with Gemma on your own device, then checks it against the only thing a fraudster never has: the running balance in your real alerts.</p>
+      <div class="cta">
+        <a class="primary" href="app.html?demo">Try the demo shop</a>
+        <a class="secondary" href="app.html">Open Alertproof</a>
       </div>
-      <div class="hero-art rise" style="--d:2" aria-hidden="true">
-        <div class="phone" id="heroPhone">
-          <div class="phone-screen">
-            <span class="ph-count">frame 3 of 6</span>
-            <span class="ph-glyph">◇</span>
-            <p class="ph-quest">Find a leaf that something has already taken a bite out of.</p>
-            <p class="ph-hint">Listen first. Look slowly.</p>
-            <span class="ph-btn">I found it</span>
-          </div>
-        </div>
+      <p class="small">The demo has no sign-up and nothing to install. It opens a provisions shop with six real-format GTBank alerts in its book, then lets you play five customers.</p>
+    </section>
+
+    <section class="proof" aria-label="Example">
+      <div class="sms">
+        <p class="from">GTBank</p>
+        <pre>Acct: 0******821
+Amt: NGN25,000.00 CR
+Desc: TRF FROM IBRAHIM MUSA
+Avail Bal: NGN264,870.20
+Date: 2026-10-17 11:22:00</pre>
       </div>
-      <svg class="meadow" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"></svg>
-    </section>
-
-    <!-- TRY IT -->
-    <section id="try" class="section try">
-      <header class="section-head center">
-        <p class="eyebrow">Try it now</p>
-        <h2>Three ways in.</h2>
-        <p>No account and nothing to install.</p>
-      </header>
-      <div class="try-grid">
-        <a class="try-card" href="#film"><span class="try-time">1 minute</span><h3>Watch the film</h3><p>Meet Sam, a kid on day 47 of "just five more minutes".</p><span class="try-go">Play →</span></a>
-        <a class="try-card" href="app.html#sample"><span class="try-time">30 seconds</span><h3>Replay a real walk</h3><p>Open a roll from my street and watch Gemma's real verdicts develop, frame by frame.</p><span class="try-go">Open the roll →</span></a>
-        <a class="try-card dark" href="app.html"><span class="try-time">15 minutes</span><h3>Take a walk</h3><p>Open the camera on your phone, pick where you're going, and go outside.</p><span class="try-go">Open the camera →</span></a>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stampcard stop">
+        <b>NO RELEASE</b>
+        <p>After your last alert your balance was <strong>₦77,160.50</strong>. ₦25,000 in should make it <strong>₦102,160.50</strong>. This alert says <strong>₦264,870.20</strong>.</p>
       </div>
-      <p class="try-note">Nothing to install. If your computer doesn't run Gemma, the online darkroom writes your quests and develops your photos with Gemma 4, the newest open Gemma, hosted by Google. For full privacy, run Gemma on your own laptop with <a href="https://ollama.com" rel="noopener">Ollama</a> (<a href="docs.html#quick-start">five minute setup</a>).</p>
     </section>
 
-    <!-- FILM -->
-    <section id="film" class="section film">
-      <header class="section-head center">
-        <p class="eyebrow">An 80-second voxel short</p>
-        <h2>Meet Sam.</h2>
-        <p>Day 47 of “just five more minutes.” Then the phone said something new.</p>
-      </header>
-      <div class="film-frame">
-        <video controls playsinline preload="none" poster="assets/film-poster.jpg" src="assets/film.mp4" aria-label="Touch Grass, Not Glass: animated short film"></video>
-      </div>
-      <p class="film-note">Made with open tools: Three.js, open-source Piper voices, and a score written in code. The app shown on screen is the real one.</p>
+    <section id="how">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><h3>Your alerts become a chain</h3><p>Share or paste your own bank alerts, or type today’s balance from your bank app once. Every real alert’s balance follows from the one before it: last balance plus the amount.</p></li>
+        <li><h3>Gemma reads, code checks</h3><p>Every bank words alerts differently, and they keep changing. Gemma, an open model running on your laptop, reads any alert or receipt screenshot. Then plain code checks that every number Gemma read is really written in the alert. If it isn’t, the number is thrown away.</p></li>
+        <li><h3>Arithmetic decides</h3><p><b class="g">PAID</b> when the balance continues your chain exactly. <b class="r">NO RELEASE</b> when it doesn’t, when it’s for another account, or when it’s an old alert sent again. <b class="a">CAN’T TELL</b> when there isn’t enough to prove it, and it tells you what to check. The model never decides whether money is real.</p></li>
+        <li><h3>Screenshots are not money</h3><p>When a customer shows a “Transfer Successful” screenshot, Alertproof checks it was sent to <em>your</em> account, then tells you exactly what your next real alert must say: <em>“CR ₦15,000 · Avail Bal ₦92,160.50”</em>. When that alert lands, it turns green on its own.</p></li>
+      </ol>
     </section>
 
-    <!-- STORY: the page itself gets quieter -->
-    <section id="story" class="story">
-      <article class="chapter" data-mood="day">
-        <span class="chapter-n">01</span>
-        <p class="eyebrow">At home</p>
-        <h2>Load the film.</h2>
-        <p>Tell it where you're going. Gemma, an open-weight model on your computer, writes six quests for the season and the light.</p>
-        <p class="quote">“Find a seed, cone or berry still on its plant.”</p>
-      </article>
-
-      <article class="chapter" data-mood="night">
-        <span class="chapter-n">02</span>
-        <p class="eyebrow">Outside</p>
-        <h2>The screen goes dark.</h2>
-        <p>One quest at a time, read aloud. No preview, no feed. Find it, tap <b>I found it</b>, take one photo, and put the phone away.</p>
-        <p class="quote">Works with no signal at all.</p>
-      </article>
-
-      <article class="chapter" data-mood="day">
-        <span class="chapter-n">03</span>
-        <p class="eyebrow">Back home</p>
-        <h2>Develop the roll.</h2>
-        <p>Gemma looks at each photo, writes down what it actually sees, then decides whether you found it. Your walk becomes a field journal.</p>
-        <p class="quote">About two minutes a photo. Put the kettle on.</p>
-      </article>
+    <section class="cols">
+      <div><h3>It says it out loud</h3><p>Your hands are busy at the counter. The answer is spoken in English or Pidgin: “No release am. This alert no follow your balance.”</p></div>
+      <div><h3>Today’s money, proven</h3><p>Every checked payment goes into a day book: what came in by transfer, from whom, which fakes were stopped, and whether your chain is unbroken.</p></div>
+      <div><h3>Works without data</h3><p>SMS alerts arrive when the internet doesn’t. On a laptop with Gemma, Alertproof checks alerts fully offline.</p></div>
     </section>
 
-    <!-- DEVELOPED -->
-    <section id="journal" class="section developed">
-      <header class="section-head center">
-        <p class="eyebrow">Out of the darkroom</p>
-        <h2>Real notes, unedited.</h2>
-        <p>Written by Gemma 3 (4B) on a laptop CPU. No GPU, no internet.</p>
-      </header>
-      <div id="sampleRoll" class="sample-roll"></div>
-      <p class="honest" id="honest">It's a small model, and it makes mistakes: it called a slug a snail. We left that in. With open weights, you can swap in a bigger model or fine-tune one.</p>
-    </section>
-
-    <!-- WHY OPEN -->
-    <section class="section why">
-      <header class="section-head center">
-        <p class="eyebrow">Why open-weight AI</p>
-        <h2>Because the grass<br>has no signal.</h2>
-      </header>
-      <ul class="why-list">
-        <li><span>⌁</span><b>Works offline</b><i>No cloud anywhere.</i></li>
-        <li><span>◎</span><b>Private on your laptop</b><i>Run it locally and photos never leave your devices.</i></li>
-        <li><span>○</span><b>Free forever</b><i>No keys. No fees.</i></li>
-        <li><span>✎</span><b>Yours to change</b><i>Swap the model or fine-tune it.</i></li>
+    <section>
+      <h2>Why it has to be an open model</h2>
+      <ul class="why">
+        <li><b>Your balance is the secret.</b> The whole check works because nobody else knows your balance. Sending every alert to someone else’s cloud would hand over the one thing that protects you. With Gemma on your own laptop, it never leaves.</li>
+        <li><b>Free to run, so cheap to sell.</b> A check costs nothing on your own machine, so a shop can pay a small monthly fee instead of a fee per alert.</li>
+        <li><b>Banks change their formats.</b> With open weights we can test every new format ourselves, swap models, or fine-tune one on Nigerian alerts. A closed API can change under you.</li>
       </ul>
     </section>
 
-    <!-- FAQ -->
-    <section id="faq" class="section faq">
-      <header class="section-head center">
-        <p class="eyebrow">FAQ</p>
-        <h2>Good questions.</h2>
-      </header>
-      <div class="faq-list">
-        <details><summary>What exactly do I do?</summary>
-          <p>Tap <b>Load film</b> to get six things to find. Go outside. Each time you find one, tap <b>I found it</b> and take a photo. At home, open the roll on your computer and tap <b>Develop</b>.</p></details>
-        <details><summary>Why can't I see if I got it right straight away?</summary>
-          <p>That's on purpose. Checking every photo on the spot would mean standing on the trail watching a spinner, which is exactly the screen time we're removing. Like film, you find out later.</p></details>
-        <details><summary>Are my photos uploaded anywhere?</summary>
-          <p>Not if Gemma runs on your own computer: then photos never leave your devices. If it doesn't, the online darkroom sends each photo to Gemma 4 hosted by Google to be developed, and this app doesn't store it. You can switch the online darkroom off in Settings. There are no accounts and no analytics either way.</p></details>
-        <details><summary>What do I need?</summary>
-          <p>Just a phone. The online darkroom handles the AI for you. If you'd like everything to stay on your own devices, install the free <a href="https://ollama.com" rel="noopener">Ollama</a> and the <code>gemma3:4b</code> model on any laptop, no graphics card needed. The <a href="docs.html#quick-start">quick start</a> takes about five minutes.</p></details>
-        <details><summary>What is "glass-free %"?</summary>
-          <p>How much of your walk the screen was off. It's the only number the app keeps.</p></details>
-      </div>
-      <p class="more"><a href="docs.html">More in the docs →</a></p>
-    </section>
-
-    <!-- CTA -->
-    <section class="final-cta">
-      <h2>The best part of this app<br>is the part where you're <em>not</em> using it.</h2>
-      <a class="btn btn-primary" href="app.html">Open the camera <span aria-hidden="true">→</span></a>
-      <svg class="meadow meadow-end" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <section id="limits">
+      <h2>What it can’t do</h2>
+      <ul class="why">
+        <li>It needs a starting point: your balance from the bank app, or your own recent alerts. Until then every answer is CAN’T TELL, never PAID.</li>
+        <li>If you miss an alert (a charge, a debit), the chain breaks. Alertproof says so and asks you to set your balance again; it doesn’t guess.</li>
+        <li>Someone who has seen your latest alert knows your balance. Keep your alerts private.</li>
+        <li>Gemma on a laptop with no graphics card takes about half a minute per alert. Online Gemma takes seconds, but the alert text goes to Google’s hosted Gemma (nothing is stored).</li>
+      </ul>
     </section>
   </main>
 
-  <footer class="footer">
-    <div>
-      <a class="logo" href="./"><img src="assets/mark-96.png" alt="" width="28" height="28"><span>Touch Grass, <em>Not Glass</em></span></a>
-      <p>Built with Gemma 3 and Ollama for the DEV Hacktoberfest 2026 Open-Source AI Challenge. MIT licensed.</p>
-    </div>
-    <nav aria-label="Footer">
-      <a href="app.html">Camera</a>
-      <a href="docs.html">Docs</a>
-      <a href="https://github.com/angelraph/touch-grass-not-glass" rel="noopener">GitHub</a>
-    </nav>
-    <p class="credits">Sample photos (CC BY / BY-SA, via Wikimedia Commons): maple leaf by Wilfredor · oak by Dietmar Rabich · forest light by Malene Thyssen · slug by Holger Krisp · squirrel by Charles J. Sharp · autumn oak by Ermell.</p>
+  <footer class="foot">
+    <p>Alertproof is open source (MIT). Built with Gemma for the Hacktoberfest Open-Source AI Challenge.</p>
   </footer>
-
-  <script type="module" src="assets/site.js"></script>
 </body>
 </html>

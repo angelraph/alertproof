@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0f6b3e"/>
+  <path d="M32 11 50 18v13c0 11.5-7.6 19.8-18 23-10.4-3.2-18-11.5-18-23V18z" fill="#fffdf8"/>
+  <text x="32" y="41" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="22" fill="#0f6b3e">₦</text>
+  <path d="m38 41 4 4 8-9" fill="none" stroke="#f0b429" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

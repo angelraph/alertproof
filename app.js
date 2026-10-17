@@ -1,462 +1,397 @@
-import * as ollama from './ollama.js';
-import { saveRoll, getRoll, listRolls, deleteRoll } from './store.js';
+// Alertproof at the counter: paste or share an alert, Gemma reads it, the balance chain decides.
+import { toKobo, naira } from './lib/money.js';
+import { check, expectAlert, audit, lastKnown, sameAccount, PAID, NO_RELEASE, CANT_TELL } from './lib/chain.js';
+import { learn, differences } from './lib/fingerprint.js';
+import { reader, localHealth, onlineHealth } from './lib/model.js';
+import { ground } from './lib/ground.js';
+import { normalise } from './lib/read.js';
+import * as store from './lib/store.js';
+import { SHOP, HISTORY, OPENING, SCENARIOS, drawReceipt } from './lib/demo.js';
+import { RECORDED } from './lib/recorded.js';
 
-const $ = id => document.getElementById(id);
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const params = new URLSearchParams(location.search);
+const DEMO = params.has('demo');
+if (DEMO) store.useDb('alertproof-demo');
 
-// Used when no model is reachable (e.g. loading a roll on a phone on the trail).
-// Easy quests that exist almost anywhere, plus a few that fit the chosen place.
-const POCKET_DECK = {
-  any: [
-    'Find a plant growing somewhere nobody planted it.',
-    'Photograph the sky with at least one cloud in it.',
-    'Find a leaf with a hole or a bite in it.',
-    'Photograph your own shadow on the ground.',
-    'Find something green that is smaller than your thumb.',
-    'Photograph a bird, or any place a bird might sit.',
-    'Find a tree and photograph its bark up close.',
-    'Find a flower of any size or colour.',
-    'Photograph something the wind is moving.',
-    'Find an insect, a spider web, or an ant trail.',
-  ],
-  // Houses, a road and a few trees: everything here should be findable on an ordinary street.
-  'city streets': [
-    'Find a weed growing in a crack in the pavement or a wall.',
-    'Photograph one of the trees on your street, from the roots up.',
-    'Photograph a leaf from a street tree, up close.',
-    'Find a plant in a pot, a window, a gate or a balcony.',
-    'Photograph the sky above the rooftops.',
-    'Photograph your own shadow on the road or a wall.',
-    'Find a bird, or a wire, roof or branch where birds sit.',
-    'Find something green growing on a wall, a fence or a roof.',
-    'Find a flower in a yard or by the side of the road.',
-    'Find a fallen leaf lying on the road or the pavement.',
-    'Photograph sunlight landing on a wall or the ground.',
-    'Find an ant, a fly, a butterfly or any small creature.',
-  ],
-  'a backyard or garden': ['Find a seed, a pod or a fruit still on its plant.', 'Photograph soil that is wet or freshly dug.', 'Find a leaf bigger than your hand.'],
-  'a city park': ['Find the oldest-looking tree in the park.', 'Photograph grass from very close, at ground level.', 'Find a fallen leaf, flower or twig on the path.'],
-  'a forest trail': ['Find moss, lichen or a mushroom.', 'Photograph light coming through the leaves.', 'Find a fallen branch or log.'],
-  'a beach or riverbank': ['Find water doing something: moving, dripping or reflecting.', 'Photograph a smooth stone or a shell.', 'Find a plant growing right at the water’s edge.'],
-};
-const pocketQuests = place => place === 'city streets'
-  ? shuffle(POCKET_DECK[place]).slice(0, 6)
-  : shuffle([...shuffle(POCKET_DECK[place] || []).slice(0, 2), ...shuffle(POCKET_DECK.any).slice(0, 4)]);
+let engine = null; // { kind, base?, model?, label }
+let busy = false;
 
-const settings = {
-  get url() { return localStorage.getItem('ollamaUrl') || 'http://localhost:11434'; },
-  set url(v) { localStorage.setItem('ollamaUrl', v); },
-  get model() { return localStorage.getItem('model') || 'gemma3:4b'; },
-  set model(v) { localStorage.setItem('model', v); },
-};
+// ---------- where Gemma runs ----------
 
-let roll = null;           // the roll currently being loaded, walked or developed
-let visibleSince = null;   // when the field screen last became visible
-let place = 'a city park';
-let modelReady = false;      // Gemma on this computer (Ollama)
-let darkroom = null;         // 'local' | 'online' | null
-const useOnline = () => { try { return localStorage.getItem('useOnline') !== '0'; } catch { return true; } };
-
-// ---------- helpers ----------
-
-const QUIET = new Set(['ready', 'field', 'done']);
-function show(view) {
-  for (const v of ['today', 'ready', 'field', 'done', 'journal', 'settings']) $(v).hidden = v !== view;
-  document.body.classList.toggle('quiet', QUIET.has(view));
-  document.querySelector('meta[name=theme-color]').content = QUIET.has(view) ? '#0c0d0a' : '#f4efe6';
-  document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === view));
-  window.scrollTo(0, 0);
+async function withTimeout(p, ms) {
+  return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 }
 
-const partOfDay = h => h < 5 ? 'night' : h < 11 ? 'morning' : h < 14 ? 'midday' : h < 18 ? 'afternoon' : h < 21 ? 'evening' : 'night';
-const greeting = h => h < 5 ? 'Still up? The stars are outside.' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
-
-function shuffle(a) {
-  const b = [...a];
-  for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
-  return b;
-}
-
-const walkMs = r => Math.max(0, (r.endedAt || Date.now()) - r.startedAt);
-const awayMs = r => Math.max(0, walkMs(r) - r.visibleMs);
-const minutes = ms => Math.round(ms / 60000);
-const glassFree = r => walkMs(r) ? Math.max(0, 100 - (r.visibleMs / walkMs(r)) * 100) : 100;
-const fmtDate = (t, opts = { weekday: 'short', month: 'short', day: 'numeric' }) => new Date(t).toLocaleDateString(undefined, opts);
-const placeName = p => ({ 'a city park': 'Park', 'a forest trail': 'Trail', 'a backyard or garden': 'Garden', 'city streets': 'Streets', 'a beach or riverbank': 'Water' })[p] || p;
-
-// ---------- TODAY ----------
-
-async function renderToday() {
-  $('greeting').textContent = greeting(new Date().getHours());
-  const rolls = (await listRolls()).filter(r => r.endedAt && !r.sample);
-  const total = rolls.reduce((s, r) => s + awayMs(r), 0);
-  $('awayMin').textContent = minutes(total);
-  $('awaySub').textContent = rolls.length
-    ? `Across ${rolls.length} walk${rolls.length > 1 ? 's' : ''}. That's the only number we keep.`
-    : 'Your first walk is waiting.';
-  const waiting = rolls.filter(r => !r.developedAt && r.shots.some(s => s.image));
-  $('darkroomCard').hidden = !waiting.length;
-  if (waiting.length) {
-    const frames = waiting.reduce((s, r) => s + r.shots.filter(x => x.image && !x.verdict).length, 0);
-    $('darkroomText').textContent = `${waiting.length} roll${waiting.length > 1 ? 's' : ''}, ${frames} frame${frames === 1 ? '' : 's'} waiting to develop.`;
+async function pickEngine() {
+  const pref = await store.getMeta('engine', 'auto');
+  const base = await store.getMeta('ollamaBase', 'http://localhost:11434');
+  const model = await store.getMeta('ollamaModel', 'gemma3:4b');
+  engine = null;
+  if (pref !== 'online') {
+    const here = await withTimeout(localHealth(base, model), 2000).catch(() => false);
+    if (here) engine = { kind: 'local', base, model, label: `${model} on this computer` };
   }
+  if (!engine && pref !== 'local') {
+    const on = await withTimeout(onlineHealth(), 4000).catch(() => null);
+    if (on) engine = { kind: 'online', label: `Online Gemma (${on.model.replace(/-it$/, '')})` };
+  }
+  const pill = $('#engine');
+  pill.textContent = engine ? engine.label : DEMO ? 'Demo: recorded Gemma readings' : 'No Gemma found. See Setup';
+  pill.className = 'pill ' + (engine ? 'on' : 'off');
 }
 
-async function checkHealth() {
-  const pill = $('modelPill'), el = $('ollamaHealth');
-  let localMsg;
+// ---------- the book ----------
+
+const GENUINE = ['mine', 'paid', 'confirmed'];
+
+async function book() {
+  const alerts = await store.listAlerts();
+  const account = await store.getMeta('account', null);
+  const anchor = await store.getMeta('anchor', null);
+  const ledger = alerts.filter(a => GENUINE.includes(a.status) && (!account || !a.reading.account_tail || sameAccount(account.number, a.reading.account_tail)));
+  return { alerts, account, anchor, ledger: ledger.map(a => ({ ...a, ...pick(a.reading) })) };
+}
+
+const pick = r => ({ amount: r.amount, balance: r.balance, direction: r.direction, reference: r.reference, time: r.time });
+
+// ---------- reading ----------
+
+async function readText(text) {
+  if (RECORDED[text] && (DEMO || !engine)) {
+    const rec = RECORDED[text];
+    return { ...ground(normalise(rec.json), text), tries: rec.tries || 1, source: `recorded from ${rec.model} (${(rec.ms / 1000).toFixed(0)}s)` };
+  }
+  if (!engine) throw new Error('No Gemma to read with. Start Ollama with a Gemma model, or turn on online Gemma in Setup.');
+  const t = Date.now();
+  const out = await reader(engine).alert(text);
+  return { ...out, source: `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s` };
+}
+
+// ---------- check an alert ----------
+
+async function checkAlert(text) {
+  text = text.trim();
+  if (!text || busy) return;
+  busy = true;
+  $('#check-btn').disabled = true;
+  const out = $('#result');
+  out.innerHTML = `<p class="working">Gemma is reading the alert${engine?.kind === 'local' ? ' on this computer' : ''}…</p>`;
   try {
-    modelReady = await ollama.health(settings.url, settings.model);
-    localMsg = modelReady ? `● ${settings.model} is ready on this computer. Everything stays on your devices.` : `Ollama is running. Now run: ollama pull ${settings.model}`;
-  } catch {
-    modelReady = false;
-    localMsg = 'No Gemma on this computer.';
-  }
-  darkroom = modelReady ? 'local' : null;
-  if (!modelReady && useOnline()) {
-    try { if (await ollama.onlineHealth()) darkroom = 'online'; } catch {}
-  }
-  pill.textContent = darkroom === 'local' ? settings.model : darkroom === 'online' ? 'online darkroom' : 'pocket mode';
-  el.textContent = darkroom === 'online'
-    ? `${localMsg} Using the online darkroom: Gemma 4 hosted by Google writes your quests and develops your photos. Photos are sent for developing and not stored by this app.`
-    : darkroom === 'local' ? localMsg : `${localMsg} You can still walk; quests come from the pocket deck.`;
-  pill.classList.toggle('ok', !!darkroom);
-  return darkroom;
-}
-
-document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-  document.querySelectorAll('.chip').forEach(c => { c.classList.toggle('on', c === chip); c.setAttribute('aria-checked', c === chip); });
-  place = chip.dataset.place;
-}));
-
-$('loadRoll').onclick = async () => {
-  const btn = $('loadRoll'), status = $('loadStatus'), now = new Date();
-  btn.disabled = true;
-  let quests, author;
-  try {
-    if (!darkroom) throw new Error('no model');
-    const ctx = { place, month: MONTHS[now.getMonth()], partOfDay: partOfDay(now.getHours()) };
-    status.className = 'status loading';
-    if (darkroom === 'local') {
-      status.textContent = `${settings.model} is writing your quests on this computer, about 30 seconds on a laptop.`;
-      quests = await ollama.writeQuests(settings.url, settings.model, ctx);
-      author = settings.model;
-    } else {
-      status.textContent = 'Gemma 4 is writing your quests in the online darkroom…';
-      quests = await ollama.writeQuestsOnline(ctx);
-      author = 'Gemma 4 (online darkroom)';
-    }
+    const read = await readText(text);
+    const { account, anchor, ledger } = await book();
+    const reading = { ...read.reading, raw: text };
+    const result = check(reading, { account: account?.number, ledger, anchor, now: DEMO ? Date.parse('2026-10-17T11:30:00') : Date.now() });
+    const looks = differences(text, learn(ledger.map(a => a.raw)));
+    const status = result.verdict === PAID ? 'paid' : result.verdict === NO_RELEASE ? 'blocked' : 'unsure';
+    const record = { id: crypto.randomUUID(), raw: text, reading: read.reading, rejected: read.rejected, checks: result.checks, verdict: result.verdict, status, addedAt: Date.now(), source: read.source };
+    // A replay is never stored again: it would poison the chain with a balance we already have.
+    if (!result.checks.some(c => c.id === 'replay' && c.ok === false)) await store.saveAlert(record);
+    let landed = null;
+    if (result.verdict === PAID && reading.direction === 'CR') landed = await settleWaiting(reading.amount);
+    renderVerdict(record, { looks, landed, expected: result.expected });
+    speak(record, landed);
+    renderWaiting();
   } catch (e) {
-    if (e.message !== 'no model') console.warn('Quest model unavailable, using pocket deck', e);
-    quests = pocketQuests(place);
-    author = 'the pocket deck';
+    out.innerHTML = `<div class="card"><h3>Couldn't read that</h3><p>${esc(e.message)}</p></div>`;
+  } finally {
+    busy = false;
+    $('#check-btn').disabled = false;
   }
-  roll = {
-    id: crypto.randomUUID(), place, author, createdAt: Date.now(),
-    shots: quests.map(quest => ({ quest })), frame: 0,
-    startedAt: null, endedAt: null, visibleMs: 0, developedAt: null,
-  };
-  await saveRoll(roll);
-  btn.disabled = false;
-  status.className = 'status';
-  status.textContent = '';
-  $('readyAuthor').textContent = `Quests written by ${author} for ${placeName(place).toLowerCase()}, ${MONTHS[now.getMonth()]} ${partOfDay(now.getHours())}.`;
-  show('ready');
+}
+
+const SAY = {
+  [PAID]: r => `Money don land. ${naira(r.reading.amount)} is in your account.`,
+  [NO_RELEASE]: r => `Don't release the goods. ${WHY[failedOn(r)] || 'This alert doesn’t add up.'}`,
+  [CANT_TELL]: () => `Can't prove it yet. Check your bank app before you release.`,
 };
+const SAY_PIDGIN = {
+  [PAID]: r => `Money don land. ${spoken(r.reading.amount)} don enter your account.`,
+  [NO_RELEASE]: r => `No release am. ${WHY_PIDGIN[failedOn(r)] || 'This alert no follow your balance.'}`,
+  [CANT_TELL]: () => `I no fit confirm am. Check your bank app first.`,
+};
+const failedOn = r => ['replay', 'account', 'direction', 'balance'].find(id => r.checks.some(c => c.id === id && c.ok === false));
+const WHY = { replay: 'This alert has been used before.', account: 'This money went to another account.', direction: 'This is money going out, not coming in.', balance: 'The balance does not follow from your last alert.' };
+const WHY_PIDGIN = { replay: 'Dem don use this alert before.', account: 'This money no enter your account.', direction: 'Na debit be this, no be credit.', balance: 'This alert no follow your balance.' };
+const spoken = k => `${Math.round(k / 100).toLocaleString('en-NG')} naira`;
 
-$('cancelRoll').onclick = async () => { await deleteRoll(roll.id); roll = null; show('today'); renderToday(); };
-$('startWalk').onclick = () => { roll.startedAt = Date.now(); saveRoll(roll); enterField(); };
-$('openDarkroom').onclick = () => openJournal();
+function renderVerdict(rec, { looks = [], landed, expected }) {
+  const node = $('#tpl-result').content.firstElementChild.cloneNode(true);
+  const cls = { [PAID]: 'paid', [NO_RELEASE]: 'stop', [CANT_TELL]: 'wait' }[rec.verdict];
+  node.classList.add(cls);
+  node.querySelector('.stamp').textContent = rec.verdict;
+  node.querySelector('.amount').textContent = rec.reading.amount != null ? `${rec.reading.direction === 'DR' ? '−' : ''}${naira(rec.reading.amount)}` : '';
+  node.querySelector('.say').textContent = SAY[rec.verdict](rec) + (landed ? ` That's ${landed.name}'s payment you were waiting for.` : '');
+  // The reason that decided it goes first: failures, then unknowns, then what passed.
+  const order = c => (c.ok === false ? 0 : c.ok == null ? 1 : 2);
+  node.querySelector('.checks').innerHTML = [...rec.checks].sort((a, b) => order(a) - order(b)).map(c => `<li class="${c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'unk'}">${esc(c.text)}</li>`).join('');
+  if (looks.length) node.querySelector('.looks').innerHTML = `Also, compared with your real alerts, this one:<ul>${looks.map(l => `<li>${esc(l)}</li>`).join('')}</ul>`;
+  const rej = Object.fromEntries((rec.rejected || []).map(r => [r.field, r.value]));
+  const r = rec.reading;
+  const rows = [
+    ['Bank', r.bank], ['Type', r.direction === 'CR' ? 'Credit' : r.direction === 'DR' ? 'Debit' : '?'],
+    ['Amount', r.amount != null ? naira(r.amount) : rej.amount != null ? naira(rej.amount) : '', rej.amount != null],
+    ['Balance', r.balance != null ? naira(r.balance) : rej.balance != null ? naira(rej.balance) : '', rej.balance != null],
+    ['Account', r.account_tail ? `…${r.account_tail}` : rej.account_tail ? `…${rej.account_tail}` : '', rej.account_tail != null],
+    ['From/to', r.counterparty], ['Reference', r.reference || rej.reference || '', rej.reference != null], ['Time', r.time],
+  ];
+  node.querySelector('.read dl').innerHTML = rows.filter(x => x[1]).map(([k, v, bad]) => `<dt>${k}</dt><dd class="${bad ? 'rej' : ''}">${esc(v)}</dd>`).join('');
+  node.querySelector('.read .meta').textContent = `${rec.source}. ${rec.rejected?.length ? `Crossed out: Gemma gave a value that isn't written in the alert, so it was thrown away.` : 'Every number above is written in the alert.'}`;
+  const actions = node.querySelector('.actions');
+  if (rec.verdict === CANT_TELL && rec.status === 'unsure') {
+    const b = document.createElement('button');
+    b.className = 'secondary'; b.textContent = 'I checked my app. It’s real';
+    b.onclick = async () => { rec.status = 'confirmed'; await store.saveAlert(rec); b.replaceWith(Object.assign(document.createElement('p'), { textContent: 'Added to your book. The chain continues from this balance.' })); renderToday(); };
+    actions.append(b);
+  }
+  $('#result').replaceChildren(node);
+  node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 
-// ---------- FIELD ----------
-
-function speak(text) {
-  if (!('speechSynthesis' in window)) return;
+async function speak(rec, landed) {
+  if (!('speechSynthesis' in window) || !(await store.getMeta('speak', true))) return;
+  const pidgin = await store.getMeta('pidgin', false);
+  const u = new SpeechSynthesisUtterance((pidgin ? SAY_PIDGIN : SAY)[rec.verdict](rec) + (landed ? ` From ${landed.name}.` : ''));
+  const voice = speechSynthesis.getVoices().find(v => /en-NG/i.test(v.lang)) || speechSynthesis.getVoices().find(v => /^en/i.test(v.lang));
+  if (voice) u.voice = voice;
+  u.rate = 0.95;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.9;
   speechSynthesis.speak(u);
 }
 
-function enterField() {
-  show('field');
-  visibleSince = Date.now();
-  showFrame();
+// ---------- customer screenshot ----------
+
+async function shrink(file) {
+  const img = await createImageBitmap(file);
+  const scale = Math.min(1, 1100 / Math.max(img.width, img.height));
+  const c = Object.assign(document.createElement('canvas'), { width: Math.round(img.width * scale), height: Math.round(img.height * scale) });
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85).split(',')[1];
 }
 
-async function resumeField(id) {
-  roll = await getRoll(id);
-  roll.startedAt ??= Date.now();
-  enterField();
+async function checkScreenshot(b64, recordedKey) {
+  if (busy) return;
+  busy = true;
+  const out = $('#result');
+  out.innerHTML = `<p class="working">Gemma is reading the screenshot…</p>`;
+  try {
+    let r, source;
+    if (recordedKey && RECORDED[recordedKey] && (DEMO || !engine)) {
+      ({ json: r } = RECORDED[recordedKey]);
+      source = `recorded from ${RECORDED[recordedKey].model}`;
+    } else {
+      if (!engine) throw new Error('No Gemma to read with. Start Ollama with a Gemma model, or turn on online Gemma in Setup.');
+      const t = Date.now();
+      r = await reader(engine).receipt(b64);
+      source = `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s`;
+    }
+    const { account, anchor, ledger } = await book();
+    const amount = toKobo(String(r.amount || ''));
+    const acctDigits = String(r.recipient_account || '').replace(/\D/g, '');
+    const checks = [];
+    if (!account) checks.push({ ok: null, text: 'Add your account number in Setup to check who this was sent to.' });
+    else if (!acctDigits) checks.push({ ok: null, text: 'The screenshot shows no account number.' });
+    else if (sameAccount(account.number, acctDigits.slice(-3)) && (acctDigits.length < 10 || acctDigits === account.number)) checks.push({ ok: true, text: `Sent to your account (…${account.number.slice(-4)}).` });
+    else checks.push({ ok: false, text: `Sent to account ${acctDigits}, not yours (…${account.number.slice(-4)}).` });
+    const biz = (account?.biz || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const name = String(r.recipient_name || '').toLowerCase();
+    if (biz.length && name) checks.push(biz.some(w => name.includes(w)) ? { ok: true, text: `Recipient name "${r.recipient_name}" matches your business.` } : { ok: false, text: `Recipient name "${r.recipient_name}" is not your business name.` });
+    if (r.status && !/success|completed|sent/i.test(r.status)) checks.push({ ok: false, text: `The screenshot itself says "${r.status}".` });
+    const exp = amount != null ? expectAlert(amount, ledger, anchor) : null;
+    const wrongPlace = checks.some(c => c.ok === false);
+    const node = document.createElement('article');
+    node.className = 'verdict ' + (wrongPlace ? 'stop' : 'wait');
+    node.innerHTML = `
+      <header><span class="stamp">${wrongPlace ? NO_RELEASE : 'WAIT FOR ALERT'}</span><span class="amount">${amount != null ? naira(amount) : ''}</span></header>
+      <p class="say">${wrongPlace ? 'This screenshot is not a payment to you.' : 'A screenshot is not money. Anyone can edit one. Wait for your own alert.'}</p>
+      <img class="shot" alt="The customer's screenshot" src="data:image/jpeg;base64,${b64}">
+      <ul class="checks">${checks.map(c => `<li class="${c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'unk'}">${esc(c.text)}</li>`).join('')}</ul>
+      ${!wrongPlace && exp ? `<div class="expect">If this is real, your next alert will say <strong>CR ${naira(exp.amount)}</strong>${exp.balance != null ? ` and <strong>Avail Bal ${naira(exp.balance)}</strong>` : ''}. Share or paste it here and Alertproof will turn it green.</div>` : ''}
+      <details class="read"><summary>What Gemma read</summary><dl>${Object.entries(r).filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="meta">${esc(source)}. Numbers on a picture can't be checked against text, so Alertproof never trusts them: it only uses them to know which alert to wait for.</p></details>`;
+    out.replaceChildren(node);
+    if (!wrongPlace && amount != null) {
+      const waiting = await store.getMeta('waiting', []);
+      waiting.push({ id: crypto.randomUUID(), amount, name: r.sender_name || 'customer', expected: exp?.balance ?? null, at: Date.now() });
+      await store.setMeta('waiting', waiting);
+      renderWaiting();
+    }
+    if ('speechSynthesis' in window && await store.getMeta('speak', true)) {
+      const pidgin = await store.getMeta('pidgin', false);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(wrongPlace ? (pidgin ? 'No release am. This money no come your account.' : 'Don’t release. This was not sent to you.') : (pidgin ? 'Screenshot no be money. Wait for your alert.' : 'A screenshot is not money. Wait for your alert.')));
+    }
+  } catch (e) {
+    out.innerHTML = `<div class="card"><h3>Couldn't read that screenshot</h3><p>${esc(e.message)}</p></div>`;
+  } finally {
+    busy = false;
+  }
 }
 
-function showFrame() {
-  const shot = roll.shots[roll.frame];
-  $('frameDots').innerHTML = roll.shots.map((s, i) =>
-    `<span class="${i < roll.frame ? 'done' : i === roll.frame ? 'now' : ''}"></span>`).join('');
-  $('questText').textContent = shot.quest;
-  speak(shot.quest);
+async function settleWaiting(amount) {
+  const waiting = await store.getMeta('waiting', []);
+  const hit = waiting.find(w => w.amount === amount);
+  if (!hit) return null;
+  await store.setMeta('waiting', waiting.filter(w => w !== hit));
+  return hit;
 }
 
-function tallyVisible() {
-  if (visibleSince) roll.visibleMs += Date.now() - visibleSince;
-  visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (!roll || $('field').hidden) return;
-  tallyVisible();
-  saveRoll(roll);
-});
-
-// Shrink to 768px so the roll stays small and the vision model has less to chew on.
-function toJpeg(file, max = 768) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * scale);
-      c.height = Math.round(img.height * scale);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(img.src);
-      resolve(c.toDataURL('image/jpeg', 0.82));
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+async function renderWaiting() {
+  const waiting = await store.getMeta('waiting', []);
+  $('#waiting').innerHTML = waiting.length ? `<div class="card"><h3>Waiting for alerts</h3>${waiting.map(w => `
+    <div class="wait-item"><span>${esc(w.name)}<br><small class="hint">${new Date(w.at).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}${w.expected != null ? ` · alert should say Avail Bal ${naira(w.expected)}` : ''}</small></span>
+    <span><b>${naira(w.amount)}</b><br><button class="link" data-drop="${w.id}">Remove</button></span></div>`).join('')}</div>` : '';
+  $$('[data-drop]').forEach(b => b.onclick = async () => {
+    await store.setMeta('waiting', (await store.getMeta('waiting', [])).filter(w => w.id !== b.dataset.drop));
+    renderWaiting();
   });
 }
 
-function flash(text) {
-  const el = $('saved');
-  el.textContent = text;
-  el.classList.add('show');
-  clearTimeout(flash.t);
-  flash.t = setTimeout(() => el.classList.remove('show'), 1800);
+// ---------- today ----------
+
+async function renderToday() {
+  const { alerts, ledger, anchor } = await book();
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const today = DEMO ? alerts : alerts.filter(a => a.addedAt >= start.getTime());
+  const inflow = today.filter(a => GENUINE.includes(a.status) && a.reading.direction === 'CR');
+  const blocked = today.filter(a => a.status === 'blocked');
+  const sum = inflow.reduce((s, a) => s + (a.reading.amount || 0), 0);
+  const gaps = audit(ledger);
+  const known = lastKnown(ledger, anchor);
+  const label = { mine: ['mine', 'your alert'], paid: ['paid', 'PAID'], confirmed: ['paid', 'checked in app'], blocked: ['stop', 'NO RELEASE'], unsure: ['wait', "CAN'T TELL"] };
+  $('#today').innerHTML = `
+    <div class="stats">
+      <div class="stat good"><b>${naira(sum)}</b><span>proven in by transfer</span></div>
+      <div class="stat"><b>${inflow.length}</b><span>payments</span></div>
+      <div class="stat bad"><b>${blocked.length}</b><span>fake or wrong alerts stopped</span></div>
+    </div>
+    ${gaps.length ? `<p class="chainline gap">The chain has ${gaps.length} gap${gaps.length > 1 ? 's' : ''}: ${gaps.map(g => `${naira(Math.abs(g.gap))} ${g.gap > 0 ? 'more' : 'less'} than expected before ${esc(g.after.reading.counterparty || 'an alert')}`).join('; ')}. Set your balance from the bank app to restart it.</p>`
+      : ledger.length ? `<p class="chainline ok">Chain unbroken across ${ledger.length} alerts.${known ? ` Balance now ${naira(known.balance)}.` : ''}</p>` : ''}
+    <ul class="book">${[...today].reverse().map(a => {
+      const [cls, tag] = label[a.status] || ['mine', a.status];
+      const r = a.reading;
+      return `<li><span class="who">${esc(r.counterparty || r.bank || 'Alert')}<span class="tag ${cls}">${tag}</span></span>
+        <span class="amt ${a.status === 'blocked' ? 'blocked' : r.direction === 'CR' ? 'cr' : ''}">${r.direction === 'DR' ? '−' : '+'}${naira(r.amount)}</span>
+        <span class="sub">${esc(r.time || new Date(a.addedAt).toLocaleTimeString('en-NG'))}${r.balance != null ? ` · bal ${naira(r.balance)}` : ''}</span></li>`;
+    }).join('') || '<li class="hint">Nothing yet today.</li>'}</ul>`;
 }
 
-async function advance(msg) {
-  roll.frame++;
-  tallyVisible();
-  if (roll.frame >= roll.shots.length) return finishRoll();
-  await saveRoll(roll);
-  flash(msg);
-  showFrame();
+// ---------- setup ----------
+
+async function loadSetup() {
+  const account = await store.getMeta('account', null);
+  if (account) { $('#biz').value = account.biz || ''; $('#acct').value = account.number || ''; $('#bank').value = account.bank || ''; }
+  const anchor = await store.getMeta('anchor', null);
+  $('#anchor-note').textContent = anchor ? `Balance set to ${naira(anchor.balance)} at ${new Date(anchor.at).toLocaleString('en-NG')}.` : '';
+  const pref = await store.getMeta('engine', 'auto');
+  $$('input[name=engine]').forEach(r => r.checked = r.value === pref);
+  $('#ollama-base').value = await store.getMeta('ollamaBase', 'http://localhost:11434');
+  $('#ollama-model').value = await store.getMeta('ollamaModel', 'gemma3:4b');
+  $('#speak').checked = await store.getMeta('speak', true);
+  $('#pidgin').checked = await store.getMeta('pidgin', false);
+  $('#setup-nudge').hidden = Boolean(account && (anchor || (await book()).ledger.length));
 }
 
-$('shutter').onchange = async e => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  const shot = roll.shots[roll.frame];
-  shot.image = await toJpeg(file);
-  shot.takenAt = Date.now();
-  if (navigator.vibrate) navigator.vibrate(40);
-  advance(`Frame ${roll.frame + 1} is on the roll. Phone away.`);
+async function teach(text) {
+  const parts = (/^\s*-{3,}\s*$/m.test(text) ? text.split(/^\s*-{3,}\s*$/m) : text.split(/\n\s*\n/)).map(s => s.trim()).filter(Boolean);
+  const out = $('#teach-out');
+  let n = 0;
+  for (const raw of parts) {
+    out.innerHTML = `<p class="working">Reading alert ${n + 1} of ${parts.length}…</p>`;
+    const read = await readText(raw);
+    await store.saveAlert({ id: crypto.randomUUID(), raw, reading: read.reading, rejected: read.rejected, status: 'mine', verdict: null, checks: [], addedAt: Date.now() + n, source: read.source });
+    n++;
+  }
+  const gaps = audit((await book()).ledger);
+  out.innerHTML = `<p class="chainline ${gaps.length ? 'gap' : 'ok'}">Added ${n} alert${n === 1 ? '' : 's'}. ${gaps.length ? `${gaps.length} gap${gaps.length > 1 ? 's' : ''} in the chain: an alert is missing between them. Set your balance from the bank app to restart from now.` : 'Chain unbroken.'}</p>`;
+  $('#teach-text').value = '';
+  loadSetup(); renderToday();
+}
+
+// ---------- demo ----------
+
+async function seedDemo() {
+  if ((await store.listAlerts()).length) return;
+  await store.setMeta('account', { biz: SHOP.biz, number: SHOP.account, bank: SHOP.bank });
+  await store.setMeta('anchor', { balance: OPENING, at: 0 });
+  let i = 0;
+  for (const raw of HISTORY) {
+    const rec = RECORDED[raw];
+    const read = rec ? ground(normalise(rec.json), raw) : null;
+    if (!read) continue;
+    await store.saveAlert({ id: `demo-${i}`, raw, reading: read.reading, rejected: read.rejected, status: 'mine', verdict: null, checks: [], addedAt: 1 + i++, source: `recorded from ${rec.model}` });
+  }
+}
+
+async function runScenario(key) {
+  const s = SCENARIOS[key];
+  if (key === 'shot') { $('#alert-text').value = ''; return checkScreenshot(drawReceipt(s), 'demo-shot'); }
+  $('#alert-text').value = s.text;
+  await checkAlert(s.text);
+  const say = document.createElement('p');
+  say.className = 'hint';
+  say.textContent = s.story;
+  $('#result').prepend(say);
+}
+
+// ---------- wiring ----------
+
+function showTab(name) {
+  $$('[role=tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  $$('.tab').forEach(t => t.hidden = t.id !== `tab-${name}`);
+  if (name === 'today') renderToday();
+  if (name === 'setup') loadSetup();
+}
+
+$$('[role=tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$$('[data-goto]').forEach(b => b.onclick = () => showTab(b.dataset.goto));
+$('#engine').onclick = () => showTab('setup');
+$('#check-btn').onclick = () => checkAlert($('#alert-text').value);
+$('#shot-input').onchange = async e => { const f = e.target.files[0]; if (f) checkScreenshot(await shrink(f)); e.target.value = ''; };
+$$('[data-demo]').forEach(b => b.onclick = () => runScenario(b.dataset.demo));
+
+$('#save-acct').onclick = async () => {
+  const number = $('#acct').value.replace(/\D/g, '');
+  if (number.length !== 10) return alert('Nigerian account numbers have 10 digits.');
+  await store.setMeta('account', { number, biz: $('#biz').value.trim(), bank: $('#bank').value.trim() });
+  $('#save-acct').textContent = 'Saved'; setTimeout(() => $('#save-acct').textContent = 'Save account', 1500);
+  loadSetup();
 };
-
-$('skip').onclick = () => { roll.shots[roll.frame].skipped = true; advance('Skipped. Next one.'); };
-$('endRoll').onclick = () => finishRoll();
-
-async function finishRoll() {
-  tallyVisible();
-  visibleSince = null;
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
-  roll.endedAt = Date.now();
-  await saveRoll(roll);
-  $('doneMin').textContent = Math.max(1, minutes(walkMs(roll)));
-  $('doneGlass').textContent = `${glassFree(roll).toFixed(0)}% glass-free`;
-  show('done');
-}
-$('toJournal').onclick = () => openJournal(roll.id);
-
-// ---------- JOURNAL / DARKROOM ----------
-
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-
-function entryHtml(s, i) {
-  const v = s.verdict;
-  return `<article class="entry ${v ? '' : 'undeveloped'}" data-i="${i}">
-    <img src="${s.image}" alt="${esc(v?.observation || 'Undeveloped frame')}">
-    ${v ? `<h3 class="entry-title">${esc(v.title)}</h3>
-      <span class="stamp ${v.matches_quest ? '' : 'no'}">${v.matches_quest ? '✓ Found' : 'Not quite'}</span>
-      <p class="entry-note">“${esc(v.field_note)}”</p>
-      <p class="entry-seen">Seen: ${esc(v.observation)}${v.species_guess && !/^n\/a$/i.test(v.species_guess) ? ` · ${esc(v.species_guess)}` : ''}${v.where ? ` · developed ${esc(v.where)}` : ''}</p>`
-      : `<h3 class="entry-title">Frame ${i + 1}</h3>`}
-    <p class="entry-quest">Quest: ${esc(s.quest)}</p>
-  </article>`;
-}
-
-async function renderJournal(focusId) {
-  const rolls = (await listRolls()).filter(r => r.startedAt);
-  const walked = rolls.filter(r => r.endedAt && !r.sample);
-  $('statRow').innerHTML = walked.length
-    ? walked.slice(0, 12).map(r => `<div><b>${Math.max(1, minutes(walkMs(r)))}</b><span>min · ${fmtDate(r.createdAt, { month: 'short', day: 'numeric' })}</span></div>`).join('')
-    : '';
-  const list = $('rollList');
-  if (!rolls.length) {
-    list.innerHTML = '<div class="empty"><b>Nothing here yet.</b>Your journal fills up after your first walk.</div>';
-    return;
-  }
-  list.innerHTML = rolls.map(r => {
-    const shots = r.shots.map((s, i) => [s, i]).filter(([s]) => s.image);
-    const pending = shots.filter(([s]) => !s.verdict).length;
-    const meta = r.endedAt
-      ? `${Math.max(1, minutes(walkMs(r)))} min outside · ${glassFree(r).toFixed(0)}% glass-free · ${shots.length} frame${shots.length === 1 ? '' : 's'}`
-      : 'Walk in progress';
-    return `<section class="roll" data-id="${r.id}">
-      <div class="roll-head"><span class="roll-date">${fmtDate(r.createdAt)}</span></div>
-      <h2 class="roll-place">${esc(placeName(r.place))} roll</h2>
-      <p class="roll-meta">${meta}</p>
-      ${r.sample ? '<p class="sample-note">A real walk on my street, developed by Gemma 3 on my laptop. Tap Replay to watch the darkroom work, using its real output.</p>' : ''}
-      <div class="roll-actions">
-        ${!r.endedAt ? '<button class="btn btn-primary" data-act="resume">Resume walk</button>' : ''}
-        ${r.sample ? '<button class="btn btn-primary" data-act="replay">Replay development</button>' : ''}
-        ${r.endedAt && pending ? `<button class="btn btn-primary" data-act="develop">Develop ${pending} frame${pending === 1 ? '' : 's'}${darkroom === 'online' ? ' online' : ''}</button>` : ''}
-        <button class="btn btn-ghost" data-act="export">Export</button>
-        <button class="del" data-act="delete" aria-label="Delete roll">Delete</button>
-      </div>
-      <p class="status" data-status></p>
-      ${shots.map(([s, i]) => entryHtml(s, i)).join('')}
-    </section>`;
-  }).join('');
-  if (focusId) list.querySelector(`[data-id="${focusId}"]`)?.scrollIntoView({ block: 'start' });
-}
-
-async function openJournal(focusId) {
-  show('journal');
-  await renderJournal(focusId);
-}
-
-$('rollList').addEventListener('click', async e => {
-  const btn = e.target.closest('[data-act]');
-  if (!btn) return;
-  const section = btn.closest('.roll');
-  const r = await getRoll(section.dataset.id);
-  const act = btn.dataset.act;
-  if (act === 'resume') { roll = r; resumeField(r.id); }
-  if (act === 'export') exportRoll(r);
-  if (act === 'delete' && confirm('Delete this roll and its photos?')) { await deleteRoll(r.id); renderJournal(); }
-  if (act === 'develop') develop(r, section, btn);
-  if (act === 'replay') replay(r, section, btn);
-});
-
-async function develop(r, section, btn) {
-  const status = section.querySelector('[data-status]');
-  const where = await checkHealth();
-  if (!where) {
-    status.textContent = 'No darkroom reachable right now. Your photos are safe on this phone, still undeveloped. Try again when you are back online.';
-    return;
-  }
-  btn.disabled = true;
-  const todo = r.shots.map((s, i) => [s, i]).filter(([s]) => s.image && !s.verdict);
-  for (const [n, [shot, i]] of todo.entries()) {
-    const el = section.querySelector(`.entry[data-i="${i}"]`);
-    el?.classList.add('developing');
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    status.className = 'status loading';
-    status.textContent = where === 'local'
-      ? `Developing frame ${n + 1} of ${todo.length} with ${settings.model} on this computer. About 2 minutes each on a CPU.`
-      : `Developing frame ${n + 1} of ${todo.length} with Gemma 4 in the online darkroom…`;
-    try {
-      const b64 = shot.image.split(',')[1];
-      shot.verdict = where === 'local'
-        ? { ...(await ollama.develop(settings.url, settings.model, shot.quest, b64)), where: 'on this computer' }
-        : { ...(await ollama.developOnline(shot.quest, b64)), where: 'in the online darkroom' };
-      await saveRoll(r);
-      if (el) el.outerHTML = entryHtml(shot, i);
-    } catch (err) {
-      el?.classList.remove('developing');
-      status.className = 'status';
-      status.textContent = err instanceof ollama.Busy ? err.message : `Frame ${i + 1} failed: ${err.message}`;
-      if (err instanceof ollama.Busy) { btn.disabled = false; return; }
-    }
-  }
-  if (r.shots.every(s => !s.image || s.verdict)) {
-    r.developedAt = Date.now();
-    await saveRoll(r);
-  }
-  status.className = 'status';
-  status.textContent = '';
-  btn.remove();
-}
-
-async function replay(r, section, btn) {
-  const status = section.querySelector('[data-status]');
-  btn.disabled = true;
-  const shots = r.shots.map((s, i) => [s, i]).filter(([s]) => s.image);
-  for (const [s, i] of shots) section.querySelector(`.entry[data-i="${i}"]`).outerHTML = entryHtml({ ...s, verdict: null }, i);
-  for (const [n, [s, i]] of shots.entries()) {
-    const el = section.querySelector(`.entry[data-i="${i}"]`);
-    el.classList.add('developing');
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    status.className = 'status loading';
-    status.textContent = `Replaying frame ${n + 1} of ${shots.length}. On my laptop this took about two minutes; here it's sped up.`;
-    await new Promise(res => setTimeout(res, 1900));
-    el.outerHTML = entryHtml(s, i);
-  }
-  status.className = 'status'; status.textContent = '';
-  btn.disabled = false;
-}
-
-async function openSample() {
-  const SAMPLE_ID = 'sample-walk-2026-10-06';
-  if (!(await getRoll(SAMPLE_ID))) {
-    try { await saveRoll(await (await fetch('assets/samples/walk-roll.json')).json()); }
-    catch { alert('Could not load the sample roll. Check your connection and try again.'); return; }
-  }
-  openJournal(SAMPLE_ID);
-}
-$('openSample').onclick = openSample;
-
-// first-time guide, shown until dismissed
-try { if (!localStorage.getItem('introSeen')) $('intro').hidden = false; } catch {}
-$('introOk').onclick = () => { $('intro').hidden = true; try { localStorage.setItem('introSeen', '1'); } catch {} };
-
-function exportRoll(r) {
-  const blob = new Blob([JSON.stringify(r)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `roll-${new Date(r.createdAt).toISOString().slice(0, 10)}-${r.id.slice(0, 4)}.json`;
+$('#save-anchor').onclick = async () => {
+  const balance = toKobo($('#anchor').value);
+  if (balance == null) return alert('Type the balance as it shows in your bank app, e.g. 72,450.20');
+  await store.setMeta('anchor', { balance, at: Date.now() });
+  $('#anchor').value = '';
+  loadSetup();
+};
+$('#teach-btn').onclick = () => { const t = $('#teach-text').value.trim(); if (t) teach(t).catch(e => $('#teach-out').innerHTML = `<p>${esc(e.message)}</p>`); };
+$$('input[name=engine]').forEach(r => r.onchange = async () => { await store.setMeta('engine', r.value); pickEngine(); });
+$('#ollama-base').onchange = async e => { await store.setMeta('ollamaBase', e.target.value.trim()); pickEngine(); };
+$('#ollama-model').onchange = async e => { await store.setMeta('ollamaModel', e.target.value.trim()); pickEngine(); };
+$('#speak').onchange = e => store.setMeta('speak', e.target.checked);
+$('#pidgin').onchange = e => store.setMeta('pidgin', e.target.checked);
+$('#export').onclick = async () => {
+  const data = { exportedAt: new Date().toISOString(), account: await store.getMeta('account', null), anchor: await store.getMeta('anchor', null), alerts: await store.listAlerts() };
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })), download: `alertproof-book-${new Date().toISOString().slice(0, 10)}.json` });
   a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-$('importRoll').onchange = async e => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  try {
-    const r = JSON.parse(await file.text());
-    if (!r.id || !Array.isArray(r.shots)) throw new Error('not a roll');
-    await saveRoll(r);
-    openJournal(r.id);
-  } catch {
-    alert('That file is not a Touch Grass roll.');
-  }
+};
+$('#wipe').onclick = async () => {
+  if (!confirm('Delete every alert, your account and your balance from this device?')) return;
+  await store.clearAlerts();
+  for (const k of ['account', 'anchor', 'waiting']) await store.setMeta(k, null);
+  if (DEMO) await seedDemo();
+  loadSetup(); renderToday(); renderWaiting(); $('#result').innerHTML = '';
 };
 
-// ---------- SETTINGS / NAV ----------
-
-$('useOnline').checked = useOnline();
-$('useOnline').onchange = e => { try { localStorage.setItem('useOnline', e.target.checked ? '1' : '0'); } catch {} checkHealth(); };
-$('ollamaUrl').onchange = e => { settings.url = e.target.value.replace(/\/$/, ''); checkHealth(); };
-$('model').onchange = e => { settings.model = e.target.value.trim(); checkHealth(); };
-
-document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => {
-  const tab = b.dataset.tab;
-  if (tab === 'journal') return openJournal();
-  show(tab);
-  if (tab === 'today') renderToday();
-}));
-
-// ---------- BOOT ----------
-
-$('ollamaUrl').value = settings.url;
-$('model').value = settings.model;
-show('today');
-renderToday();
-if (location.hash === '#sample') openSample();
-addEventListener('hashchange', () => { if (location.hash === '#sample') openSample(); });
-checkHealth();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+(async () => {
+  if (DEMO) { $('#demo-bar').hidden = false; await seedDemo(); }
+  await loadSetup();
+  renderWaiting();
+  await pickEngine();
+  // Android share target: an SMS shared to Alertproof arrives as ?text=
+  const shared = params.get('text') || params.get('title');
+  if (shared) { $('#alert-text').value = shared; history.replaceState(null, '', location.pathname + (DEMO ? '?demo' : '')); checkAlert(shared); }
+  if (DEMO && params.get('demo')) runScenario(params.get('demo'));
+  if ('serviceWorker' in navigator && location.hostname !== 'localhost') navigator.serviceWorker.register('sw.js');
+})();

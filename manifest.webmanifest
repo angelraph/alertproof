@@ -1,27 +1,19 @@
 {
-  "name": "Touch Grass, Not Glass",
-  "short_name": "Touch Grass",
-  "description": "A camera that only works outside. Gemma develops your roll at home.",
+  "name": "Alertproof",
+  "short_name": "Alertproof",
+  "description": "Check a bank alert before you hand over the goods.",
   "start_url": "./app.html",
   "display": "standalone",
-  "background_color": "#f4efe6",
-  "theme_color": "#f4efe6",
+  "background_color": "#f6f3ec",
+  "theme_color": "#0f6b3e",
   "icons": [
-    {
-      "src": "assets/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "./app.html",
+    "method": "GET",
+    "params": { "title": "title", "text": "text" }
+  }
 }

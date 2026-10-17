@@ -1,8 +1,8 @@
 {
-  "name": "touch-grass-not-glass",
+  "name": "alertproof",
   "version": "1.0.0",
-  "description": "A camera that only works outside. Open-weight Gemma develops your roll locally.",
+  "description": "Proves whether a bank alert is real before you hand over the goods. Open-weight Gemma reads the alert; your own balance chain decides.",
   "type": "module",
-  "scripts": { "start": "node serve.mjs" },
+  "scripts": { "start": "node serve.mjs", "test": "node --test test/core.test.mjs", "eval": "node eval/run.mjs" },
   "license": "MIT"
 }
