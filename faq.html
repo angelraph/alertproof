@@ -7,6 +7,9 @@
   <meta name="description" content="Answers about fake alerts, how Alertproof checks them, privacy, setup, banks and pricing.">
   <meta name="theme-color" content="#050d09">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add('js')</script>
+  <script type="speculationrules">{"prerender":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/api/*"}},{"not":{"href_matches":"/app.html*"}}]},"eagerness":"moderate"}],"prefetch":[{"urls":["product.html","how-it-works.html","pricing.html","faq.html","app.html"],"eagerness":"eager"}]}</script>
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -40,7 +43,7 @@
           <details><summary>How do I check an SMS quickly?</summary><div>On Android, install Alertproof to your home screen. Then long-press the alert SMS, tap Share, and choose Alertproof. You can also copy and paste any alert or email.</div></details>
           <details><summary>Why does it say CAN’T TELL when I know the money came?</summary><div>Usually an alert was missed: a bank charge, an SMS fee or a debit you didn’t add. The chain breaks, and Alertproof won’t guess. Set your balance from your bank app again and you’re back on track.</div></details>
           <details><summary>Does it work without internet?</summary><div>Yes, with Gemma on a laptop. SMS alerts still arrive when data is down, and Alertproof reads them offline. On a phone-only setup, reading needs data.</div></details>
-          <details><summary>How fast is it?</summary><div>About 40 seconds per alert with Gemma on a laptop with no graphics card, and seconds with online Gemma or a laptop with a graphics card. The arithmetic itself is instant.</div></details>
+          <details><summary>How fast is it?</summary><div>Instant. The first time Alertproof meets your bank’s alert format, Gemma reads it carefully and Alertproof learns where the amount and balance sit. Every alert after that in the same format is read in under a millisecond, with the same checks. Do “Teach it your alerts” once in Setup and the formats are learned before your first customer.</div></details>
 
           <h3>Banks and formats</h3>
           <details><summary>Which banks does it work with?</summary><div>We’ve tested SMS, push and email alert formats from GTBank, Access, Zenith, UBA, First Bank, OPay, Moniepoint and PalmPay. Because Gemma reads any wording, other banks usually work too. If yours doesn’t, tell us.</div></details>

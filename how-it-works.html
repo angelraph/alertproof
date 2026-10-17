@@ -7,6 +7,9 @@
   <meta name="description" content="Gemma reads the alert. Code checks every number is written in it. Your balance chain decides. The model never decides whether money is real.">
   <meta name="theme-color" content="#050d09">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add('js')</script>
+  <script type="speculationrules">{"prerender":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/api/*"}},{"not":{"href_matches":"/app.html*"}}]},"eagerness":"moderate"}],"prefetch":[{"urls":["product.html","how-it-works.html","pricing.html","faq.html","app.html"],"eagerness":"eager"}]}</script>
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -28,6 +31,7 @@
           <div class="card rv d1"><span class="pill g">2 · Ground</span><h3>Code checks what Gemma read</h3><p>Every number must be written in the alert itself. So must the bank name and the credit/debit word. Anything Gemma made up is thrown away, and Gemma is asked once more, told what was wrong.</p></div>
           <div class="card rv d2"><span class="pill g">3 · Decide</span><h3>Your balance chain decides</h3><p>Last balance + amount must equal the new balance, to the kobo. The account must be yours. The reference must be new. Only then: PAID.</p></div>
         </div>
+        <div class="card glow rv" style="margin-top:20px"><span class="pill g">Then · Learn</span><h3>Gemma once, then instant</h3><p>Your alerts come from the same one or two banks, in the same layout every time. After Gemma reads an alert and every value passes grounding, Alertproof remembers the words that sit before each value, like <code>Avail Bal: NGN</code>. The next alert in that layout is read in under a millisecond, through the same grounding and chain. It only keeps a learned format if re-reading the alerts it learned from gives exactly what Gemma read. Anything that doesn’t fit goes back to Gemma.</p></div>
       </div>
     </section>
 
@@ -67,7 +71,7 @@
           <div><b class="grad-text">0 / 20</b><span>invented-balance fakes released</span></div>
           <div><b>10 / 10</b><span>old alerts sent again, stopped</span></div>
           <div><b id="ev-genuine">20 / 20</b><span>genuine payments proven PAID</span></div>
-          <div><b id="ev-time">~38s</b><span>per alert on a CPU-only laptop</span></div>
+          <div><b id="ev-time">0.06 ms</b><span>per alert once a format is learned, 56 of 60 with no model</span></div>
         </div>
         <div class="prose rv" style="margin:32px auto 0">
           <h2>What we got wrong, and fixed</h2>

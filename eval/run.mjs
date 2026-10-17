@@ -9,12 +9,14 @@ import { ALERT_SCHEMA, alertPrompt } from '../lib/prompts.js';
 import { readAlert } from '../lib/read.js';
 import { check, sameAccount, PAID, NO_RELEASE, CANT_TELL } from '../lib/chain.js';
 import { naira } from '../lib/money.js';
+import { learn as learnFormat, apply as applyFormat } from '../lib/template.js';
+import { ground } from '../lib/ground.js';
 
 const ACCT = '0123454821';
 const NOW = Date.parse('2026-10-17T20:00:00');
 const args = process.argv.slice(2);
 const online = args[0] === '--online' ? args[1] : null;
-const model = online ? 'gemma-4 (hosted)' : args[0] || 'gemma3:4b';
+const model = online ? 'gemma-4 (hosted)' : (args[0] && !args[0].startsWith('--') ? args[0] : 'gemma3:4b');
 const only = args.find(a => a.startsWith('--limit='))?.split('=')[1];
 const dir = new URL('./results/', import.meta.url);
 
@@ -125,8 +127,47 @@ async function report() {
       }
     }
   }
+  md += await learnedSection();
   await writeFile(new URL('./EVAL.md', import.meta.url), md);
   console.log('wrote eval/EVAL.md');
 }
 
 if (args[0] === '--report') report(); else run();
+
+// ---------- learned formats ----------
+// Gemma reads ONE genuine alert per format (its real reading from the main run). From that single
+// reading Alertproof learns the format, then reads the other six alerts of that format without Gemma.
+async function learnedSection() {
+  let rows;
+  try { rows = JSON.parse(await readFile(new URL(`${model.replace(/[^\w.-]+/g, '_')}.json`, dir), 'utf8')); } catch { return ''; }
+  const cases = corpus();
+  let read = 0, fellBack = 0, wrongField = 0, right = 0, unsafe = 0, total = 0;
+  const times = [];
+  const per = [];
+  for (const fmt of Object.keys(FORMATS)) {
+    const teacher = rows.find(r => r.fmt === fmt && r.kind === 'genuine');
+    const c0 = cases.find(c => c.id === teacher?.id);
+    if (!teacher || !c0) continue;
+    const T = {};
+    // The format is learned from the trader's own morning alerts (their book) plus Gemma's first reading.
+    const learned = learnFormat(T, c0.text, teacher.reading);
+    let ok = 0, fb = 0;
+    for (const c of cases.filter(x => x.fmt === fmt && x.id !== teacher.id)) {
+      total++;
+      const t = process.hrtime.bigint();
+      const r = learned ? applyFormat(T, c.text) : null;
+      const g = r ? ground(r, c.text) : null;
+      times.push(Number(process.hrtime.bigint() - t) / 1e6);
+      if (!g || g.rejected.length) { fellBack++; fb++; continue; }
+      read++;
+      const tr = { amount: c.truth.amount, balance: c.truth.balance, direction: c.truth.direction };
+      if (g.reading.amount !== tr.amount || g.reading.balance !== tr.balance || g.reading.direction !== tr.direction) wrongField++;
+      const v = check({ ...g.reading, raw: c.text }, { account: ACCT, ledger: c.ledger, now: NOW }).verdict;
+      if (v === c.expect) { right++; ok++; }
+      if (v === PAID && c.expect !== PAID) unsafe++;
+    }
+    per.push(`| ${fmt} | ${learned ? 'yes' : 'no'} | ${ok} of 6 | ${fb} |`);
+  }
+  times.sort((a, b) => a - b);
+  return `\n## Learned formats: Gemma once, then instant\n\nFor each format, Alertproof learned the layout from Gemma's single reading of the first genuine alert (from the ${model} run above), then read the other ${total} alerts with no model at all. Every value still went through grounding and the balance chain.\n\n| | |\n|---|---|\n| Alerts read from a learned format | ${read} of ${total} |\n| Sent back to Gemma (didn't fit exactly) | ${fellBack} |\n| Wrong amount, balance or direction | **${wrongField}** |\n| Right verdict | ${right} of ${read} |\n| Fakes released | **${unsafe}** |\n| Time per alert (median / slowest) | ${times[Math.floor(times.length / 2)].toFixed(2)} ms / ${times.at(-1).toFixed(2)} ms |\n\n| Format | Learned from one reading | Right verdict, no Gemma | Back to Gemma |\n|---|---|---|---|\n${per.join('\n')}\n`;
+}

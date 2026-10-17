@@ -12,6 +12,9 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add('js')</script>
+  <script type="speculationrules">{"prerender":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/api/*"}},{"not":{"href_matches":"/app.html*"}}]},"eagerness":"moderate"}],"prefetch":[{"urls":["product.html","how-it-works.html","pricing.html","faq.html","app.html"],"eagerness":"eager"}]}</script>
   <link rel="stylesheet" href="assets/base.css">
   <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -102,7 +105,7 @@
         <div class="stats rv">
           <div><b class="grad-text">0</b><span>invented-balance fakes released in our 70-alert test</span></div>
           <div><b>10</b><span>alert formats read: SMS, app notifications and emails</span></div>
-          <div><b>₦0</b><span>per check when Gemma runs on your own laptop</span></div>
+          <div><b>&lt;1 ms</b><span>per check once Gemma has learned your bank’s format</span></div>
           <div><b>100%</b><span>of your alerts stay on your device</span></div>
         </div>
       </div>
@@ -197,7 +200,7 @@ Avail Bal: NGN264,870.20</div></div>
             <span class="tag">Offline &amp; private</span>
             <h3>SMS still lands when data doesn’t.</h3>
             <p>On a laptop with Gemma, Alertproof checks alerts with no internet at all. Your balance is the secret that protects you, so it never goes to anyone’s cloud.</p>
-            <ul><li>Open-weight Gemma runs on your own machine</li><li>Your book lives only on your device</li><li>On a phone? Online Gemma reads it, and nothing is stored</li></ul>
+            <ul><li>Open-weight Gemma runs on your own machine</li><li>Learns your bank’s format once, then checks in under a millisecond</li><li>Your book lives only on your device</li><li>On a phone? Online Gemma reads it, and nothing is stored</li></ul>
             <a class="btn btn-ghost" href="security.html">How we protect you <span class="arr">→</span></a>
           </div>
           <div class="visual rv d1">

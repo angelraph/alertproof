@@ -95,3 +95,29 @@ Fields read correctly (after grounding): amount 70/70, balance 70/70, credit/deb
 - `palmpay_push/genuine` → PAID. Thrown away: account_tail "00" (not written in the alert)
 - `palmpay_push/fake-balance` → NO RELEASE. Thrown away: account_tail "00" (not written in the alert)
 - `palmpay_push/wrong-account` → PAID (expected NO RELEASE)
+
+## Learned formats: Gemma once, then instant
+
+For each format, Alertproof learned the layout from Gemma's single reading of the first genuine alert (from the gemma3:4b run above), then read the other 60 alerts with no model at all. Every value still went through grounding and the balance chain.
+
+| | |
+|---|---|
+| Alerts read from a learned format | 56 of 60 |
+| Sent back to Gemma (didn't fit exactly) | 4 |
+| Wrong amount, balance or direction | **0** |
+| Right verdict | 54 of 56 |
+| Fakes released | **2** |
+| Time per alert (median / slowest) | 0.06 ms / 1.04 ms |
+
+| Format | Learned from one reading | Right verdict, no Gemma | Back to Gemma |
+|---|---|---|---|
+| gtbank_sms | yes | 6 of 6 | 0 |
+| access_sms | yes | 6 of 6 | 0 |
+| zenith_sms | yes | 5 of 6 | 1 |
+| uba_sms | yes | 6 of 6 | 0 |
+| firstbank_sms | yes | 6 of 6 | 0 |
+| opay_push | yes | 4 of 6 | 1 |
+| moniepoint_sms | yes | 5 of 6 | 1 |
+| palmpay_push | yes | 4 of 6 | 1 |
+| gtbank_email | yes | 6 of 6 | 0 |
+| access_email | yes | 6 of 6 | 0 |

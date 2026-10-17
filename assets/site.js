@@ -133,3 +133,17 @@ if (fs) fs.oninput = () => {
   $$('.faq details').forEach(d => { const hit = !q || d.textContent.toLowerCase().includes(q); d.hidden = !hit; if (q && hit) d.open = true; });
   $$('.faq h3').forEach(h => { let n = h.nextElementSibling, any = false; while (n && n.tagName === 'DETAILS') { any ||= !n.hidden; n = n.nextElementSibling; } h.hidden = !any; });
 };
+
+// ---------- instant pages ----------
+// Older browsers without prerendering: fetch a page as soon as a finger or mouse heads for its link.
+const warmed = new Set();
+const warm = e => {
+  const a = e.target.closest?.('a[href]');
+  if (!a || a.origin !== location.origin || warmed.has(a.pathname)) return;
+  warmed.add(a.pathname);
+  const l = Object.assign(document.createElement('link'), { rel: 'prefetch', href: a.href });
+  document.head.append(l);
+};
+addEventListener('pointerover', warm, { passive: true });
+addEventListener('touchstart', warm, { passive: true });
+if ('serviceWorker' in navigator && !['localhost', '127.0.0.1'].includes(location.hostname)) navigator.serviceWorker.register('sw.js');

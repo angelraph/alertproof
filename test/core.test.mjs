@@ -107,3 +107,31 @@ test('ground accepts a two-digit tail only right after a mask, and only the digi
   assert.equal(ground({ account_tail: '21' }, text).reading.account_tail, null);
   assert.equal(ground({ account_tail: '00' }, 'Amt: NGN1,000.00 Bal: NGN5,000.00').reading.account_tail, null);
 });
+
+import { learn as learnFormat, apply as applyFormat } from '../lib/template.js';
+
+test('a learned format reads the next alert of every bank instantly and exactly', () => {
+  for (const fmt of Object.keys(FORMATS)) {
+    const alerts = day(ACCT, '2026-10-17T07:30:00', 4000000, 3);
+    const T = {};
+    assert.ok(learnFormat(T, FORMATS[fmt](alerts[0]), { amount: alerts[0].amount, balance: alerts[0].balance, direction: alerts[0].direction }), fmt);
+    for (const f of alerts.slice(1)) {
+      const r = applyFormat(T, FORMATS[fmt](f));
+      assert.ok(r, `${fmt} fell back`);
+      assert.deepEqual([r.amount, r.balance, r.direction], [f.amount, f.balance, f.direction], fmt);
+    }
+  }
+});
+
+test('a learned format never reads another bank\'s alert', () => {
+  const a = day(ACCT, '2026-10-17T07:30:00', 4000000, 3);
+  const T = {};
+  learnFormat(T, FORMATS.gtbank_sms(a[0]), { amount: a[0].amount, balance: a[0].balance, direction: a[0].direction });
+  assert.equal(applyFormat(T, FORMATS.access_sms(a[1])), null);
+  assert.equal(applyFormat(T, 'GTBank Alert\nCredit Amt: N15,000\nBalance: N250,000'), null);
+});
+
+test('a learned format refuses to learn when amount and balance are the same number', () => {
+  const T = {};
+  assert.equal(learnFormat(T, 'Amt: NGN500.00 CR\nAvail Bal: NGN500.00', { amount: 50000, balance: 50000, direction: 'CR' }), null);
+});

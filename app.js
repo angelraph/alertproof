@@ -8,6 +8,7 @@ import { normalise } from './lib/read.js';
 import * as store from './lib/store.js';
 import { SHOP, HISTORY, OPENING, SCENARIOS, drawReceipt } from './lib/demo.js';
 import { RECORDED } from './lib/recorded.js';
+import { learn as learnFormat, apply as applyFormat } from './lib/template.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -59,15 +60,30 @@ const pick = r => ({ amount: r.amount, balance: r.balance, direction: r.directio
 
 // ---------- reading ----------
 
+// Fast path first: a format Gemma has already read correctly is read again in milliseconds.
+// Anything new goes to Gemma, and a clean Gemma reading teaches the format for next time.
 async function readText(text) {
+  const templates = await store.getMeta('templates', {});
+  const t0 = performance.now();
+  const fast = applyFormat(templates, text);
+  if (fast) {
+    const g = ground(fast, text);
+    if (!g.rejected.length) return { ...g, tries: 0, fast: true, source: `learned ${fast.bank ? fast.bank + ' ' : ''}format, ${Math.max(1, Math.round(performance.now() - t0))} ms` };
+  }
+  let out;
   if (RECORDED[text] && (DEMO || !engine)) {
     const rec = RECORDED[text];
-    return { ...ground(normalise(rec.json), text), tries: rec.tries || 1, source: `recorded from ${rec.model} (${(rec.ms / 1000).toFixed(0)}s)` };
+    out = { ...ground(normalise(rec.json), text), tries: rec.tries || 1, source: `recorded from ${rec.model} (${(rec.ms / 1000).toFixed(0)}s)` };
+  } else {
+    if (!engine) throw new Error('No Gemma to read with. Start Ollama with a Gemma model, or turn on online Gemma in Setup.');
+    const t = Date.now();
+    out = { ...(await reader(engine).alert(text)), source: `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s` };
   }
-  if (!engine) throw new Error('No Gemma to read with. Start Ollama with a Gemma model, or turn on online Gemma in Setup.');
-  const t = Date.now();
-  const out = await reader(engine).alert(text);
-  return { ...out, source: `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s` };
+  if (!out.rejected.length && learnFormat(templates, text, out.reading)) {
+    await store.setMeta('templates', templates);
+    out.source += '. Format learned: the next alert like this will be instant';
+  }
+  return out;
 }
 
 // ---------- check an alert ----------
@@ -315,13 +331,16 @@ async function seedDemo() {
   if ((await store.listAlerts()).length) return;
   await store.setMeta('account', { biz: SHOP.biz, number: SHOP.account, bank: SHOP.bank });
   await store.setMeta('anchor', { balance: OPENING, at: 0 });
+  const templates = {};
   let i = 0;
   for (const raw of HISTORY) {
     const rec = RECORDED[raw];
     const read = rec ? ground(normalise(rec.json), raw) : null;
     if (!read) continue;
     await store.saveAlert({ id: `demo-${i}`, raw, reading: read.reading, rejected: read.rejected, status: 'mine', verdict: null, checks: [], addedAt: 1 + i++, source: `recorded from ${rec.model}` });
+    if (!read.rejected.length) learnFormat(templates, raw, read.reading);
   }
+  await store.setMeta('templates', templates);
 }
 
 async function runScenario(key) {
@@ -379,7 +398,7 @@ $('#export').onclick = async () => {
 $('#wipe').onclick = async () => {
   if (!confirm('Delete every alert, your account and your balance from this device?')) return;
   await store.clearAlerts();
-  for (const k of ['account', 'anchor', 'waiting']) await store.setMeta(k, null);
+  for (const k of ['account', 'anchor', 'waiting', 'templates']) await store.setMeta(k, null);
   if (DEMO) await seedDemo();
   loadSetup(); renderToday(); renderWaiting(); $('#result').innerHTML = '';
 };

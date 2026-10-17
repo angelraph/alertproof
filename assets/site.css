@@ -253,6 +253,7 @@ section { position: relative; }
 @media (max-width: 760px) { .foot-grid { grid-template-columns: 1fr 1fr; } .foot-grid > :first-child { grid-column: 1 / -1; } }
 
 /* scroll reveal */
-.rv { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.2, .8, .2, 1); }
+.rv { opacity: 0; transform: translateY(14px); transition: opacity .35s ease, transform .35s cubic-bezier(.2, .8, .2, 1); }
 .rv.in { opacity: 1; transform: none; }
-.rv.d1 { transition-delay: .08s; } .rv.d2 { transition-delay: .16s; } .rv.d3 { transition-delay: .24s; }
+.rv.d1 { transition-delay: .04s; } .rv.d2 { transition-delay: .08s; } .rv.d3 { transition-delay: .12s; }
+html:not(.js) .rv { opacity: 1; transform: none; }
