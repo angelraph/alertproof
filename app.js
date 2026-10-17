@@ -123,7 +123,7 @@ function renderVerdict(rec, { looks = [], landed, expected }) {
   node.classList.add(cls);
   node.querySelector('.stamp').textContent = rec.verdict;
   node.querySelector('.amount').textContent = rec.reading.amount != null ? `${rec.reading.direction === 'DR' ? '−' : ''}${naira(rec.reading.amount)}` : '';
-  node.querySelector('.say').textContent = SAY[rec.verdict](rec) + (landed ? ` That's ${landed.name}'s payment you were waiting for.` : '');
+  node.querySelector('.say').textContent = SAY[rec.verdict](rec) + (landed ? ` That's the payment you were waiting for from ${landed.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}.` : '');
   // The reason that decided it goes first: failures, then unknowns, then what passed.
   const order = c => (c.ok === false ? 0 : c.ok == null ? 1 : 2);
   node.querySelector('.checks').innerHTML = [...rec.checks].sort((a, b) => order(a) - order(b)).map(c => `<li class="${c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'unk'}">${esc(c.text)}</li>`).join('');

@@ -66,13 +66,13 @@
         <div class="stats rv" id="eval-stats">
           <div><b class="grad-text">0 / 20</b><span>invented-balance fakes released</span></div>
           <div><b>10 / 10</b><span>old alerts sent again, stopped</span></div>
-          <div><b id="ev-genuine">–</b><span>genuine payments proven PAID</span></div>
-          <div><b id="ev-time">~40s</b><span>per alert on a CPU-only laptop</span></div>
+          <div><b id="ev-genuine">20 / 20</b><span>genuine payments proven PAID</span></div>
+          <div><b id="ev-time">~38s</b><span>per alert on a CPU-only laptop</span></div>
         </div>
         <div class="prose rv" style="margin:32px auto 0">
           <h2>What we got wrong, and fixed</h2>
-          <p>The first run released <strong>2 fakes</strong>. Both were alerts for someone else’s account, in formats that show almost none of the account number: Zenith shows only <code>01**876**32</code>, and OPay notifications show no account at all. Our grounding check only accepted three or more visible digits, so the account check was skipped. We now accept two digits when they come straight after a mask, and only the digits the alert actually shows. Then we re-ran those formats.</p>
-          <p>One case is a true limit. If an alert shows no account at all <em>and</em> carries your exact balance to the kobo, nothing in it can tell it apart from a real one. In practice that means someone has already seen your latest alert, so keep your alerts private.</p>
+          <p>The first run released <strong>4 fakes</strong>. All four were alerts for someone else’s account that also carried the trader’s exact balance, the worst case. Two were in formats that show only two account digits (Zenith’s <code>01**876**32</code>, Access emails). Our grounding check demanded three, so the account check was skipped. We now accept two digits when they come straight after a mask, and only the digits the alert actually shows. Then we re-ran those formats: both fakes are now stopped, with no new false alarms.</p>
+          <p>The other two are a true limit. OPay and PalmPay notifications show no account at all. If such an alert also carries your exact balance to the kobo, nothing in it can tell it apart from a real one. In practice that means someone has already seen your latest alert, so keep your alerts private.</p>
           <p>Full case-by-case results, including every value Gemma got wrong and the grounding check threw away: <a href="https://github.com/angelraph/alertproof/blob/main/eval/EVAL.md">eval/EVAL.md</a>.</p>
         </div>
       </div>
