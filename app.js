@@ -34,7 +34,10 @@ async function pickEngine() {
   const base = await store.getMeta('ollamaBase', 'http://localhost:11434');
   const model = await store.getMeta('ollamaModel', 'gemma3:4b');
   engine = null;
-  if (pref !== 'online') {
+  // On the public site, only look for Gemma on this computer when the trader asked for it in Setup;
+  // when the app itself runs on the laptop (localhost), look automatically.
+  const onLaptop = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if (pref === 'local' || (pref === 'auto' && onLaptop)) {
     const here = await withTimeout(localHealth(base, model), 2000).catch(() => false);
     if (here) engine = { kind: 'local', base, model, label: `${model} on this computer` };
   }
