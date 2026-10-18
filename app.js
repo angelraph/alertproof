@@ -11,6 +11,7 @@ import { RECORDED } from './lib/recorded.js';
 import { learn as learnFormat, apply as applyFormat } from './lib/template.js';
 import { sessionChecks, findSessions } from './lib/session.js';
 import { focus } from './lib/focus.js';
+import { fallbackRead } from './lib/fallback.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -81,9 +82,17 @@ async function readText(text) {
     const rec = RECORDED[text];
     out = { ...ground(normalise(rec.json), text), tries: rec.tries || 1, source: `recorded from ${rec.model} (${(rec.ms / 1000).toFixed(0)}s)` };
   } else {
-    if (!engine) throw new Error('No Gemma to read with. Start Ollama with a Gemma model, or turn on online Gemma in Setup.');
     const t = Date.now();
-    out = { ...(await reader(engine).alert(text)), source: `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s` };
+    try {
+      if (!engine) throw new Error('no Gemma reachable');
+      out = { ...(await reader(engine).alert(text)), source: `${engine.label}, ${((Date.now() - t) / 1000).toFixed(1)}s` };
+    } catch (e) {
+      // Gemma couldn't answer (offline, busy, down). The trader still gets an answer: the backup
+      // reader reads the common labels, and its numbers go through the same grounding and chain.
+      const g = ground(normalise(fallbackRead(text)), text);
+      if (g.reading.amount == null) throw e;
+      return { ...g, tries: 0, backup: true, source: `built-in backup reader, because Gemma ${engine ? 'didn’t answer' : 'isn’t reachable'} (${e.message.replace(/\.$/, '')})` };
+    }
   }
   if (!out.rejected.length && learnFormat(templates, text, out.reading)) {
     await store.setMeta('templates', templates);
@@ -398,7 +407,12 @@ async function seedDemo() {
 
 async function runScenario(key) {
   const s = SCENARIOS[key];
-  if (key === 'shot') { $('#alert-text').value = ''; return checkScreenshot(drawReceipt(s), 'demo-shot'); }
+  if (key === 'shot' || key === 'fakeshot') {
+    $('#alert-text').value = '';
+    await checkScreenshot(drawReceipt(s), `demo-${key}`);
+    const say = document.createElement('p'); say.className = 'hint'; say.textContent = s.story; $('#result').prepend(say);
+    return;
+  }
   $('#alert-text').value = s.text;
   await checkAlert(s.text);
   const say = document.createElement('p');
