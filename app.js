@@ -10,6 +10,7 @@ import { SHOP, HISTORY, OPENING, SCENARIOS, drawReceipt } from './lib/demo.js';
 import { RECORDED } from './lib/recorded.js';
 import { learn as learnFormat, apply as applyFormat } from './lib/template.js';
 import { sessionChecks, findSessions } from './lib/session.js';
+import { focus } from './lib/focus.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -94,7 +95,8 @@ async function readText(text) {
 // ---------- check an alert ----------
 
 async function checkAlert(text) {
-  text = text.trim();
+  // Long pasted emails: keep only the transaction lines, word for word.
+  text = focus(text.trim());
   if (!text || busy) return;
   busy = true;
   $('#check-btn').disabled = true;
@@ -124,7 +126,12 @@ async function checkAlert(text) {
     speak(record, landed);
     renderWaiting();
   } catch (e) {
-    out.innerHTML = `<div class="card"><h3>Couldn't read that</h3><p>${esc(e.message)}</p></div>`;
+    const busyNow = /busy/i.test(e.message);
+    out.innerHTML = `<div class="card"><h3>${busyNow ? 'The online reader is busy' : 'Couldn’t read that this time'}</h3>
+      <p>${busyNow ? 'Many people are checking at once. Wait a few seconds and try again.' : 'The online Gemma reader had a hiccup. Your alert is fine; just try again.'}</p>
+      <div class="row"><button class="primary" id="retry-btn" type="button">Try again</button></div>
+      <details class="read"><summary>Details</summary><p class="meta">${esc(e.message)}</p></details></div>`;
+    $('#retry-btn').onclick = () => { busy = false; checkAlert(text); };
   } finally {
     busy = false;
     $('#check-btn').disabled = false;
@@ -353,7 +360,7 @@ async function loadSetup() {
 }
 
 async function teach(text) {
-  const parts = (/^\s*-{3,}\s*$/m.test(text) ? text.split(/^\s*-{3,}\s*$/m) : text.split(/\n\s*\n/)).map(s => s.trim()).filter(Boolean);
+  const parts = (/^\s*-{3,}\s*$/m.test(text) ? text.split(/^\s*-{3,}\s*$/m) : [text]).map(s => focus(s.trim())).filter(Boolean);
   const out = $('#teach-out');
   const skipped = [];
   let n = 0;
