@@ -1,0 +1,27 @@
+Six o'clock in the evening. The shop is full. A customer says, I don send am. Your phone buzzes. But is that money real?
+
+Fake alert apps can print any bank's message, with any amount. The words look perfect. But there is one thing a fraudster can never know. Your balance.
+
+Every real alert carries your new balance. Last balance, plus the amount, equals the new balance, to the kobo. A fake has to guess that number. And the guess is always wrong.
+
+This is Alertproof. Real alerts. Real checks. No fake.
+
+Here is how to use it. Open alertproof dot tech on your phone, and tap Setup. Type your business name and your account number. Then open your bank app, and type today's balance. You only do this once.
+
+Now, when an alert lands, copy it. Open the Check tab, paste it, and tap Check alert. Gemma, an open A.I. model, reads the alert. Plain code makes sure every number is really written there. Then your balance decides.
+
+If the balance follows, it says Paid, and it tells you out loud.
+
+[App voice, Pidgin] Money don land. Fifteen thousand naira don enter your account.
+
+If the balance does not follow, it says No release, and shows you the exact numbers.
+
+[App voice, Pidgin] No release am. This alert no follow your balance.
+
+A customer shows you a screenshot instead? Tap Customer screenshot. Alertproof reads the session I.D., the thirty digit fingerprint of every Nigerian bank transfer. It holds the sending bank's code, and the exact time the money moved. If that time does not match the time on the screen, the receipt was edited.
+
+We tested Alertproof on thirty one real bank alerts, and on forty five fakes made from them. It read every real alert correctly, and it stopped every fake.
+
+Your balance is the secret that protects you, so Alertproof keeps it on your own device. It runs on Gemma, an open model. No bill for every check, and on a laptop it even works offline.
+
+Try the demo shop now, at alertproof dot tech. Alertproof. Check the alert, before the goods leave your hand.

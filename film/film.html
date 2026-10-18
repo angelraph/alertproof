@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alertproof film</title>
+<style>
+@font-face { font-family: Inter; src: url('../assets/fonts/inter.woff2') format('woff2'); font-weight: 100 900; }
+:root { --g1: #0bb38a; --g2: #8cf0a0; --ink: #ecf6f0; --muted: #8fa79a; --bg: #050d09; --card: #0d1b14; --line: #1d3328; --red: #ff6b5e; --amber: #f3c45f; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+body { font-family: Inter, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+.layer { position: absolute; inset: 0; }
+.glow { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+#grid { background-image: linear-gradient(rgba(140,240,160,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(140,240,160,.045) 1px, transparent 1px); background-size: 80px 80px; }
+.scene { position: absolute; inset: 0; opacity: 0; }
+.abs { position: absolute; }
+.center { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.h1 { font-weight: 900; letter-spacing: -.04em; line-height: .98; }
+.grad { background: linear-gradient(120deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mono { font-family: ui-monospace, Consolas, monospace; }
+.card { background: var(--card); border: 2px solid var(--line); border-radius: 26px; }
+.pill { display: inline-block; padding: 8px 18px; border-radius: 99px; font-weight: 800; font-size: 22px; }
+
+/* phone */
+.phone { position: absolute; width: 470px; height: 940px; border-radius: 70px; padding: 18px; background: linear-gradient(160deg, #1f3329, #0a1410); box-shadow: 0 60px 120px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.07); }
+.phone .scr { position: relative; width: 100%; height: 100%; border-radius: 54px; background: #06100b; overflow: hidden; }
+.phone .notch { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); width: 130px; height: 34px; border-radius: 20px; background: #000; z-index: 5; }
+.phone .bar { display: flex; align-items: center; gap: 12px; padding: 70px 28px 18px; font-weight: 800; font-size: 26px; border-bottom: 1px solid var(--line); }
+.phone .bar img { width: 34px; }
+.phone .bar .on { margin-left: auto; font-size: 16px; color: var(--g2); border: 1.5px solid #1f4a37; padding: 4px 12px; border-radius: 99px; }
+.tabs { display: flex; padding: 0 22px; }
+.tabs div { flex: 1; text-align: center; padding: 16px 0; font-weight: 700; font-size: 20px; color: var(--muted); border-bottom: 4px solid transparent; }
+.tabs div.on { color: var(--ink); border-color: var(--g1); }
+.field { margin: 14px 26px; }
+.field label { display: block; font-size: 17px; color: var(--muted); margin-bottom: 8px; }
+.field .box { border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; font-size: 22px; min-height: 60px; background: #0b1812; white-space: pre-wrap; }
+.btn { margin: 12px 26px; border-radius: 18px; padding: 20px; text-align: center; font-weight: 800; font-size: 24px; background: linear-gradient(120deg, var(--g1), var(--g2)); color: #03130d; }
+.ripple { position: absolute; border-radius: 50%; border: 4px solid var(--g2); pointer-events: none; }
+.verdict { margin: 18px 22px; border-radius: 24px; padding: 24px; border: 3px solid; }
+.verdict b { display: block; font-size: 54px; font-weight: 900; letter-spacing: -.02em; }
+.verdict p { font-size: 20px; margin-top: 10px; line-height: 1.35; }
+.verdict.paid { background: #0f3324; border-color: #2c8b5f; color: #7ff0b4; }
+.verdict.stop { background: #3a1210; border-color: #a3362d; color: #ff9b91; }
+.sms { background: #13241c; border: 2px solid #1e3a2c; border-radius: 22px; padding: 18px 22px; font: 22px/1.45 ui-monospace, Consolas, monospace; white-space: pre-line; color: #d9ece2; }
+.sms .from { font-family: Inter; font-weight: 800; font-size: 18px; color: #8fb3a1; margin-bottom: 6px; display: flex; justify-content: space-between; }
+
+/* captions */
+#cap { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); max-width: 1500px; text-align: center; font-size: 40px; font-weight: 700; line-height: 1.3; padding: 14px 30px; border-radius: 20px; background: rgba(3, 10, 7, .62); backdrop-filter: blur(6px); }
+#cap span { color: rgba(236, 246, 240, .38); }
+#cap span.said { color: #ecf6f0; }
+#cap span.now { color: #8cf0a0; }
+#cap.app { font-style: italic; border: 2px solid rgba(140, 240, 160, .35); }
+#logo { position: absolute; left: 56px; top: 44px; display: flex; align-items: center; gap: 14px; font-weight: 900; font-size: 34px; letter-spacing: -.035em; }
+#logo img { width: 48px; }
+#prog { position: absolute; left: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, var(--g1), var(--g2)); }
+.chip { position: absolute; padding: 18px 26px; border-radius: 20px; background: var(--card); border: 2px solid var(--line); font-size: 28px; font-weight: 700; display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+.chip .n { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(120deg, var(--g1), var(--g2)); color: #03130d; font-weight: 900; }
+.link { position: absolute; width: 330px; padding: 26px; border-radius: 26px; background: var(--card); border: 2px solid var(--line); }
+.link .tag { font-size: 20px; font-weight: 800; padding: 6px 14px; border-radius: 99px; display: inline-block; }
+.link .amt { font-size: 46px; font-weight: 900; margin-top: 12px; }
+.link .bal { font: 24px ui-monospace, Consolas, monospace; color: var(--muted); margin-top: 8px; }
+.wave { display: flex; gap: 9px; align-items: center; height: 90px; }
+.wave i { width: 12px; border-radius: 6px; background: linear-gradient(var(--g2), var(--g1)); }
+.stat b { display: block; white-space: nowrap; font-size: 150px; font-weight: 900; letter-spacing: -.05em; line-height: 1; }
+.stat span { font-size: 30px; color: var(--muted); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="grid"></div>
+  <div class="glow" id="g1" style="width:900px;height:900px;background:rgba(11,179,138,.28)"></div>
+  <div class="glow" id="g2" style="width:700px;height:700px;background:rgba(140,240,160,.14)"></div>
+
+  <!-- 1 HOOK -->
+  <div class="scene" id="s-hook">
+    <div class="abs h1" id="hk-time" style="left:150px;top:190px;font-size:190px">18:00</div>
+    <div class="abs" id="hk-sub" style="left:158px;top:400px;font-size:44px;color:var(--muted);font-weight:600">The shop is full.</div>
+    <div class="abs card" id="hk-bubble" style="left:150px;top:520px;padding:30px 40px;font-size:58px;font-weight:800;border-color:#2c8b5f">“I don send am.”</div>
+    <div class="abs h1" id="hk-q" style="left:150px;top:720px;font-size:84px"></div>
+    <div class="phone" id="hk-phone" style="left:1250px;top:70px"><div class="scr"><div class="notch"></div>
+      <div class="abs" style="left:0;right:0;top:120px;text-align:center;font-size:110px;font-weight:200">18:00</div>
+      <div class="abs" style="left:0;right:0;top:250px;text-align:center;font-size:24px;color:var(--muted)">Friday, 17 October</div>
+      <div class="abs sms" id="hk-sms" style="left:22px;right:22px;top:360px"><div class="from"><span>GTBank</span><span>now</span></div>Acct: 0******821
+Amt: NGN25,000.00 CR
+Desc: TRF FROM IBRAHIM MUSA
+Avail Bal: NGN264,870.20</div>
+    </div></div>
+  </div>
+
+  <!-- 2 PROBLEM -->
+  <div class="scene" id="s-problem">
+    <div id="pb-cards"></div>
+    <div class="abs h1 center" id="pb-big" style="font-size:150px;text-align:center;white-space:nowrap">Your <span class="grad">balance.</span></div>
+  </div>
+
+  <!-- 3 CHAIN -->
+  <div class="scene" id="s-chain">
+    <div class="abs h1" id="ch-title" style="left:150px;top:150px;font-size:72px">Every real alert <span class="grad">continues your balance.</span></div>
+    <div id="ch-links"></div>
+    <div class="abs mono" id="ch-eq" style="left:150px;top:700px;font-size:44px;color:var(--muted)"></div>
+    <div class="abs h1" id="ch-wrong" style="left:150px;top:790px;font-size:64px;color:var(--red)">The guess is always wrong.</div>
+  </div>
+
+  <!-- 4 BRAND -->
+  <div class="scene" id="s-brand">
+    <div class="abs" id="br-ring" style="left:960px;top:430px;border-radius:50%;border:3px solid rgba(140,240,160,.5)"></div>
+    <img class="abs" id="br-icon" src="../assets/icon.svg" style="left:960px;top:400px;width:260px;transform:translate(-50%,-50%)">
+    <div class="abs h1" id="br-word" style="left:960px;top:640px;font-size:150px;transform:translateX(-50%);white-space:nowrap"></div>
+    <div class="abs" id="br-tag" style="left:960px;top:830px;transform:translateX(-50%);font-size:44px;font-weight:700;white-space:nowrap;display:flex;gap:28px"><span>Real alerts.</span><span>Real checks.</span><span class="grad">No fake.</span></div>
+  </div>
+
+  <!-- 5 SETUP / 6 CHECK / 7 PAID / 8 FAKE share one phone -->
+  <div class="scene" id="s-app">
+    <div id="ap-steps"></div>
+    <div class="phone" id="ap-phone" style="left:1260px;top:70px"><div class="scr"><div class="notch"></div>
+      <div class="bar"><img src="../assets/icon.svg"><span>Alert<span class="grad">proof</span></span><span class="on">● Online</span></div>
+      <div class="tabs"><div id="tab-check">Check</div><div>Today</div><div id="tab-setup">Setup</div></div>
+      <div id="ap-body"></div>
+    </div><div class="ripple" id="ap-rip"></div></div>
+    <div class="abs h1" id="ap-head" style="left:150px;top:260px;font-size:110px;width:1000px"></div>
+    <div class="abs" id="ap-wave" style="left:160px;top:620px"></div>
+  </div>
+
+  <!-- 9 SCREENSHOT -->
+  <div class="scene" id="s-shot">
+    <div class="abs h1" id="sh-title" style="left:120px;top:120px;font-size:68px">The <span class="grad">session ID</span> never lies.</div>
+    <div class="abs card" id="sh-rcpt" style="left:1300px;top:150px;width:500px;padding:34px;background:#f3f6f5;color:#111;border:none">
+      <div style="text-align:center;font-weight:800;font-size:30px">Transfer Successful</div>
+      <div style="text-align:center;font-weight:900;font-size:58px;margin-top:10px" id="sh-amt">₦15,000.00</div>
+      <div style="text-align:center;font-size:24px;color:#666;margin-top:6px" id="sh-time">17 Oct 2026, 11:29:07</div>
+      <div style="margin-top:26px;font-size:20px;color:#777">Session ID</div>
+      <div class="mono" style="font-size:20px;font-weight:700;word-break:break-all">100004261017102907384920175531</div>
+      <div style="text-align:center;font-weight:900;color:#1dcf9f;font-size:28px;margin-top:22px">OPay</div>
+    </div>
+    <div class="abs mono" id="sh-digits" style="left:120px;top:330px;font-size:52px;font-weight:800;letter-spacing:.02em;white-space:nowrap"></div>
+    <div id="sh-parts"></div>
+    <div class="abs" id="sh-verdict" style="left:120px;top:705px;font-size:46px;font-weight:900;line-height:1.25"></div>
+  </div>
+
+  <!-- 10 PROOF -->
+  <div class="scene" id="s-proof">
+    <div class="abs h1" style="left:150px;top:150px;font-size:72px">Tested on <span class="grad">real bank alerts.</span></div>
+    <div class="abs stat" id="pr-a" style="left:150px;top:360px"><b class="grad">0/31</b><span>real alerts read correctly</span></div>
+    <div class="abs stat" id="pr-b" style="left:780px;top:360px"><b class="grad">0/45</b><span>fakes made from them, stopped</span></div>
+    <div class="abs stat" id="pr-c" style="left:1410px;top:360px"><b style="font-size:120px;margin-top:22px">0 ms</b><span>per alert once learned</span></div>
+  </div>
+
+  <!-- 11 OPEN -->
+  <div class="scene" id="s-open">
+    <div class="abs h1" id="op-t" style="left:150px;top:170px;font-size:84px;width:1100px">Your balance is the secret.<br><span class="grad">It stays with you.</span></div>
+    <div id="op-chips"></div>
+    <img class="abs" id="op-icon" src="../assets/icon.svg" style="left:1480px;top:360px;width:300px">
+  </div>
+
+  <!-- 12 CTA -->
+  <div class="scene" id="s-cta">
+    <img class="abs" id="ct-icon" src="../assets/icon.svg" style="left:960px;top:300px;width:200px;transform:translate(-50%,-50%)">
+    <div class="abs h1" id="ct-url" style="left:960px;top:470px;transform:translateX(-50%);font-size:140px;white-space:nowrap"><span class="grad">alertproof.tech</span></div>
+    <div class="abs" id="ct-btn" style="left:960px;top:680px;transform:translateX(-50%);padding:28px 56px;border-radius:24px;background:linear-gradient(120deg,var(--g1),var(--g2));color:#03130d;font-size:40px;font-weight:900;white-space:nowrap">Try the demo shop →</div>
+    <div class="abs" id="ct-tag" style="left:960px;top:830px;transform:translateX(-50%);font-size:38px;color:var(--muted);white-space:nowrap">Check the alert, before the goods leave your hand.</div>
+  </div>
+
+  <div id="logo"><img src="../assets/icon.svg"><span>Alert<span class="grad">proof</span></span></div>
+  <div id="cap"></div>
+  <div id="prog"></div>
+</div>
+
+<script>
+// Every frame is a pure function of time t, so the renderer can step frame by frame in sync with the voice.
+const $ = s => document.querySelector(s);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = x => 1 - Math.pow(1 - x, 3);
+const inOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const outBack = x => { const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const css = (el, o) => { for (const k in o) el.style[k] = o[k]; };
+let TL;
+
+// absolute time of a spoken word in a scene (first match at or after `after`)
+function kw(id, word, after = 0) {
+  const s = TL.scenes.find(x => x.id === id);
+  for (const p of s.parts) for (const w of p.words) if (w.t >= after && w.w.toLowerCase().replace(/[^a-z0-9]/g, '').startsWith(word)) return w.t;
+  return s.start;
+}
+const T = {};
+
+function build() {
+  // problem: six cloned alerts
+  const banks = [['GTBank', 'Acct: 0******821\nAmt: NGN25,000.00 CR\nAvail Bal: NGN264,870.20'], ['Access', 'Credit\nAmt:NGN50,000.00\nAvail Bal:NGN1,250,000.00'], ['OPay', 'You have received ₦18,000.00\nYour OPay balance is ₦99,999.00'],
+    ['Zenith', 'CR Amt:120,000.00\nBal:500,000.00'], ['UBA', 'Txn: Credit\nAmt:NGN 7,500.00\nBal:NGN 80,000.00 CR'], ['Moniepoint', 'Credit: NGN35,000\nBal: NGN300,000.']];
+  $('#pb-cards').innerHTML = banks.map(([b, t], i) => `<div class="abs sms" id="pb${i}" style="width:520px;left:${150 + (i % 3) * 560}px;top:${150 + Math.floor(i / 3) * 330}px"><div class="from"><span>${b}</span><span>now</span></div>${t}<div class="abs pill" style="right:18px;top:16px;background:#3a1210;color:#ff9b91;font-size:18px;opacity:0" id="pbf${i}">FAKE</div></div>`).join('');
+  // chain links
+  const L = [['8:14 · CR', '+₦4,500', 'Bal ₦56,810.50', 'g'], ['8:52 · CR', '+₦1,200', 'Bal ₦58,010.50', 'g'], ['9:30 · DR', '−₦12,500', 'Bal ₦45,510.50', 'a'], ['11:22 · “CR”', '+₦25,000', 'Says ₦264,870.20', 'r']];
+  $('#ch-links').innerHTML = L.map(([a, b, c, k], i) => `<div class="link" id="cl${i}" style="left:${150 + i * 420}px;top:340px;${k === 'r' ? 'border-color:#a3362d;background:#2a0e0c' : ''}"><span class="tag" style="background:${k === 'g' ? '#0f3324;color:#7ff0b4' : k === 'a' ? '#33270b;color:#f3c45f' : '#3a1210;color:#ff9b91'}">${a}</span><div class="amt">${b}</div><div class="bal" style="${k === 'r' ? 'color:#ff9b91' : ''}">${c}</div></div>${i < 3 ? `<div class="abs" id="ca${i}" style="left:${150 + i * 420 + 338}px;top:420px;height:6px;background:linear-gradient(90deg,var(--g1),var(--g2));border-radius:3px"></div>` : ''}`).join('');
+  // brand wordmark letters
+  $('#br-word').innerHTML = [...'Alert'].map(c => `<span style="display:inline-block">${c}</span>`).join('') + [...'proof'].map(c => `<span class="grad" style="display:inline-block">${c}</span>`).join('');
+  // app steps
+  const steps = [['1', 'Open alertproof.tech'], ['2', 'Tap Setup'], ['3', 'Business name + account'], ['4', 'Today’s balance, once'], ['5', 'Paste the alert'], ['6', 'Tap Check alert']];
+  $('#ap-steps').innerHTML = steps.map(([n, t], i) => `<div class="chip" id="st${i}" style="left:150px;top:${150 + i * 112}px"><span class="n">${n}</span>${t}</div>`).join('');
+  $('#ap-wave').innerHTML = `<div class="wave">${Array.from({ length: 22 }, () => '<i></i>').join('')}</div>`;
+  // session parts
+  const CW = 29.7;
+  const P = [['100004', '100004 = the sending bank: OPay', '#7ff0b4', 0], ['261017102907', '26 10 17 · 10:29:07 = the exact time the money moved', '#f3c45f', 6], ['384920175531', 'and a number no other transfer has', '#8fa79a', 18]];
+  $('#sh-parts').innerHTML = P.map(([d, l, c, k], i) => `<div class="abs" id="sp${i}" style="left:${120 + k * CW}px;top:410px;opacity:0"><div style="height:8px;width:${d.length * CW - 8}px;background:${c};border-radius:4px"></div></div><div class="abs" id="spl${i}" style="left:120px;top:${470 + i * 70}px;opacity:0;font-size:34px;font-weight:700;color:${c};white-space:nowrap"><span style="display:inline-block;width:18px;height:18px;border-radius:5px;background:${c};margin-right:16px"></span>${l}</div>`).join('');
+  // open chips
+  const C = [['🔒', 'Alerts stay on your device'], ['₦0', 'No bill for every check'], ['📶', 'Works offline on a laptop'], ['🧠', 'Open model: Gemma']];
+  $('#op-chips').innerHTML = C.map(([i, t], k) => `<div class="chip" id="oc${k}" style="left:150px;top:${470 + k * 112}px"><span class="n" style="font-size:24px">${i}</span>${t}</div>`).join('');
+}
+
+// ---------- the phone screens ----------
+const SMS = 'Acct: 0******821\nAmt: NGN15,000.00 CR\nDesc: TRF FROM CHIDI OKAFOR\nAvail Bal: NGN92,160.50';
+const typed = (s, x) => s.slice(0, Math.round(s.length * clamp(x)));
+function phoneSetup(lt, s) {
+  const k = x => kw('setup', x);
+  const a = seg(TL.t, k('type') - 0.2, k('type') + 1.6), b = seg(TL.t, k('account') - 0.3, k('account') + 1.4), c = seg(TL.t, k('today') - 0.2, k('today') + 1.3);
+  return `<div class="field"><label>Business name</label><div class="box">${typed('Ngozi Eze Provisions', a)}</div></div>
+    <div class="field"><label>Account number</label><div class="box">${typed('0123454821', b)}</div></div>
+    <div class="field"><label>Available balance (₦)</label><div class="box">${typed('77,160.50', c)}</div></div>
+    <div class="btn" style="opacity:${c >= 1 ? 1 : .55}">Save</div>`;
+}
+function phoneCheck(stage) {
+  const p = clamp(stage.paste);
+  return `<div class="field" style="margin-top:22px"><label>Paste the alert that just came in</label><div class="box mono" style="font-size:20px;min-height:170px">${typed(SMS, p)}</div></div><div class="btn">Check alert</div>
+    ${stage.reading ? `<div style="margin:16px 26px;color:var(--muted);font-size:19px">Gemma is reading the alert…</div>` : ''}`;
+}
+function phoneVerdict(kind, x) {
+  const s = 1 + (1 - outBack(clamp(x))) * .6;
+  const v = kind === 'paid'
+    ? `<div class="verdict paid" style="transform:scale(${s});opacity:${clamp(x * 3)}"><b>PAID</b><p>₦77,160.50 + ₦15,000 = ₦92,160.50. Money don land.</p></div>`
+    : `<div class="verdict stop" style="transform:scale(${s});opacity:${clamp(x * 3)}"><b>NO RELEASE</b><p>Should be ₦102,160.50.<br>This alert says ₦264,870.20.</p></div>`;
+  const sms = kind === 'paid' ? SMS : 'Acct: 0******821\nAmt: NGN25,000.00 CR\nDesc: TRF FROM IBRAHIM MUSA\nAvail Bal: NGN264,870.20';
+  return `<div class="field" style="margin-top:22px"><div class="box mono" style="font-size:19px">${sms}</div></div>${v}`;
+}
+
+// ---------- scene animators (lt = seconds into the scene) ----------
+const A = {
+  hook(lt, d) {
+    const t = TL.t;
+    css($('#hk-time'), { opacity: seg(lt, 0, .6), transform: `translateY(${(1 - outCubic(seg(lt, 0, .8))) * 60}px)` });
+    css($('#hk-sub'), { opacity: seg(t, kw('hook', 'shop') - .2, kw('hook', 'shop') + .4) });
+    const bt = kw('hook', 'customer');
+    css($('#hk-bubble'), { opacity: seg(t, bt, bt + .3), transform: `scale(${lerp(.6, 1, outBack(seg(t, bt, bt + .5)))})`, transformOrigin: 'left center' });
+    const pz = kw('hook', 'phone') - .3;
+    const buzz = t > pz + .4 && t < pz + 1.4 ? Math.sin(t * 90) * 10 : 0;
+    css($('#hk-phone'), { transform: `translateY(${(1 - outCubic(seg(lt, .2, 1.2))) * 900}px) rotate(${buzz * .25}deg) translateX(${buzz}px)` });
+    css($('#hk-sms'), { opacity: seg(t, pz + .3, pz + .6), transform: `translateY(${(1 - outBack(seg(t, pz + .3, pz + .9))) * -120}px)` });
+    const qt = kw('hook', 'but');
+    const q = 'Is that money real?';
+    $('#hk-q').innerHTML = `<span class="grad">${typed(q, seg(t, qt, qt + 1.4))}</span>`;
+  },
+  problem(lt, d) {
+    const t = TL.t, big = kw('problem', 'your', kw('problem', 'know'));
+    for (let i = 0; i < 6; i++) {
+      const a = seg(lt, .1 + i * .18, .6 + i * .18);
+      const fade = 1 - seg(t, big - .5, big);
+      css($('#pb' + i), { opacity: a * lerp(.15, 1, fade), transform: `translateY(${(1 - outBack(a)) * 80}px) rotate(${(i % 2 ? 1 : -1) * (1 - a) * 6}deg) scale(${lerp(.92, 1, fade)})` });
+      css($('#pbf' + i), { opacity: seg(t, kw('problem', 'words') + i * .12, kw('problem', 'words') + .3 + i * .12) * fade });
+    }
+    const b = seg(t, big - .1, big + .6);
+    css($('#pb-big'), { opacity: b, transform: `translate(-50%,-50%) scale(${lerp(1.4, 1, outCubic(b))})` });
+  },
+  chain(lt, d) {
+    const t = TL.t;
+    css($('#ch-title'), { opacity: seg(lt, 0, .5), transform: `translateX(${(1 - outCubic(seg(lt, 0, .7))) * -80}px)` });
+    for (let i = 0; i < 4; i++) {
+      const at = i < 3 ? .8 + i * .55 : kw('chain', 'fake') - TL.cur.start;
+      const a = seg(lt, at, at + .5);
+      const shake = i === 3 && lt > at + .3 && lt < at + .9 ? Math.sin(lt * 80) * 12 : 0;
+      css($('#cl' + i), { opacity: a, transform: `translateY(${(1 - outBack(a)) * 90}px) translateX(${shake}px)` });
+      if (i < 3) css($('#ca' + i), { width: `${seg(lt, at + .35, at + .7) * 70}px` });
+    }
+    const eq = kw('chain', 'last');
+    $('#ch-eq').innerHTML = lt < 1 ? '' : `₦45,510.50 + ₦25,000 = <span style="color:${t > kw('chain', 'fake') ? 'var(--red)' : 'var(--g2)'}">${typed('₦70,510.50', seg(t, eq + .3, eq + 1.6))}</span>${t > kw('chain', 'fake') + .5 ? '  ≠  ₦264,870.20' : ''}`;
+    css($('#ch-eq'), { opacity: seg(t, eq, eq + .4) });
+    const w = kw('chain', 'guess', kw('chain', 'and'));
+    css($('#ch-wrong'), { opacity: seg(t, w - .3, w + .2), transform: `scale(${lerp(1.3, 1, outCubic(seg(t, w - .3, w + .3)))})`, transformOrigin: 'left center' });
+  },
+  brand(lt, d) {
+    const t = TL.t;
+    const r = seg(lt, .1, 1.4);
+    css($('#br-ring'), { width: `${lerp(60, 900, outCubic(r))}px`, height: `${lerp(60, 900, outCubic(r))}px`, transform: 'translate(-50%,-50%)', opacity: 1 - r });
+    css($('#br-icon'), { transform: `translate(-50%,-50%) scale(${lerp(.2, 1, outBack(seg(lt, 0, .8)))}) rotate(${(1 - outCubic(seg(lt, 0, .9))) * -30}deg)`, opacity: seg(lt, 0, .3) });
+    [...$('#br-word').children].forEach((s, i) => css(s, { opacity: seg(lt, .5 + i * .05, .8 + i * .05), transform: `translateY(${(1 - outBack(seg(lt, .5 + i * .05, .9 + i * .05))) * 70}px)` }));
+    const k = [kw('brand', 'real'), kw('brand', 'real', kw('brand', 'real') + .3), kw('brand', 'no')];
+    [...$('#br-tag').children].forEach((s, i) => css(s, { opacity: seg(t, k[i] - .1, k[i] + .2), transform: `translateY(${(1 - outCubic(seg(t, k[i] - .1, k[i] + .3))) * 30}px)` }));
+  },
+  app(lt, d) {
+    const t = TL.t, id = TL.cur.id;
+    css($('#ap-phone'), { transform: `translateY(${id === 'setup' ? (1 - outCubic(seg(lt, 0, .9))) * 900 : 0}px)` });
+    const stepAt = [kw('setup', 'open'), kw('setup', 'tap'), kw('setup', 'type'), kw('setup', 'then'), kw('check', 'paste'), kw('check', 'tap')];
+    stepAt.forEach((s, i) => {
+      const on = t >= s - .2, nxt = i < 5 ? t >= stepAt[i + 1] - .2 : t > kw('check', 'gemma');
+      const a = seg(t, s - .3, s + .2);
+      css($('#st' + i), { opacity: (id === 'paid' || id === 'fake') ? 1 - seg(lt, 0, .3) : a, transform: `translateX(${(1 - outCubic(a)) * -60}px)`, borderColor: on && !nxt ? '#2c8b5f' : 'var(--line)', background: on && !nxt ? '#0f2a1e' : 'var(--card)' });
+    });
+    let html = '', tab = 'check', rip = null;
+    if (id === 'setup') {
+      tab = t > kw('setup', 'tap') ? 'setup' : 'check';
+      html = tab === 'setup' ? phoneSetup(lt) : phoneCheck({ paste: 0 });
+      rip = kw('setup', 'tap') + .2; if (t > kw('setup', 'then')) rip = kw('setup', 'once') - .3;
+    } else if (id === 'check') {
+      const pa = kw('check', 'paste');
+      html = phoneCheck({ paste: seg(t, pa, pa + .5), reading: t > kw('check', 'tap') + .5 });
+      rip = kw('check', 'tap') + .3;
+    } else if (id === 'paid') html = phoneVerdict('paid', seg(lt, .1, .6));
+    else if (id === 'fake') html = phoneVerdict('fake', seg(lt, .1, .6));
+    $('#ap-body').innerHTML = html;
+    $('#tab-check').className = tab === 'check' ? 'on' : ''; $('#tab-setup').className = tab === 'setup' ? 'on' : '';
+    // tap ripple
+    const r = rip ? seg(t, rip, rip + .6) : 0;
+    const pos = id === 'setup' && t < kw('setup', 'then') ? [395, 175] : id === 'setup' ? [235, 580] : [235, 470];
+    css($('#ap-rip'), { left: `${pos[0]}px`, top: `${pos[1]}px`, width: `${r * 140}px`, height: `${r * 140}px`, transform: 'translate(-50%,-50%)', opacity: r > 0 && r < 1 ? 1 - r : 0 });
+    // shake on NO RELEASE
+    const head = $('#ap-head');
+    if (id === 'paid') head.innerHTML = `<span class="grad">PAID.</span><div style="font-size:52px;margin-top:24px;color:var(--ink);letter-spacing:-.02em">And it says it out loud.</div>`;
+    else if (id === 'fake') head.innerHTML = `<span style="color:var(--red)">NO RELEASE.</span><div style="font-size:52px;margin-top:24px;color:var(--ink);letter-spacing:-.02em">With the exact numbers.</div>`;
+    else head.innerHTML = '';
+    css(head, { opacity: id === 'paid' || id === 'fake' ? seg(lt, .2, .6) : 0, transform: `scale(${id === 'paid' || id === 'fake' ? lerp(1.25, 1, outBack(seg(lt, .2, .7))) : 1})`, transformOrigin: 'left center' });
+    const sh = id === 'fake' && lt > .2 && lt < .8 ? Math.sin(lt * 70) * 14 : 0;
+    $('#stage').style.transform = sh ? `translateX(${sh}px)` : '';
+    // voice bars while the app speaks
+    const app = TL.cur.parts.find(p => p.v === 'app');
+    const speaking = app && t > app.start && t < app.start + app.dur;
+    css($('#ap-wave'), { opacity: speaking ? 1 : 0 });
+    [...document.querySelectorAll('#ap-wave i')].forEach((b, i) => b.style.height = `${speaking ? 14 + Math.abs(Math.sin(t * 9 + i * .7) * Math.sin(t * 3.1 + i)) * 76 : 10}px`);
+  },
+  shot(lt, d) {
+    const t = TL.t;
+    css($('#sh-title'), { opacity: seg(lt, 0, .5) });
+    css($('#sh-rcpt'), { opacity: seg(lt, .2, .6), transform: `translateX(${(1 - outCubic(seg(lt, .2, 1))) * 300}px) rotate(${(1 - outCubic(seg(lt, .2, 1))) * 8}deg)` });
+    const s = kw('shot', 'session');
+    const id = '100004261017102907384920175531';
+    const shown = typed(id, seg(t, s, s + 1.4));
+    const scramble = shown + (shown.length < 30 ? String(Math.floor(t * 997) % 10) : '');
+    $('#sh-digits').innerHTML = `<span style="color:#7ff0b4">${scramble.slice(0, 6)}</span><span style="color:#f3c45f">${scramble.slice(6, 18)}</span><span style="color:#8fa79a">${scramble.slice(18)}</span>`;
+    css($('#sh-digits'), { opacity: seg(t, s - .2, s + .2) });
+    const pk = [kw('shot', 'sending'), kw('shot', 'exact'), kw('shot', 'exact') + 1.2];
+    pk.forEach((k, i) => { css($('#sp' + i), { opacity: seg(t, k - .2, k + .3), transform: `scaleX(${outCubic(seg(t, k - .2, k + .5))})`, transformOrigin: 'left' }); css($('#spl' + i), { opacity: seg(t, k - .1, k + .3), transform: `translateX(${(1 - outCubic(seg(t, k - .1, k + .5))) * -50}px)` }); });
+    const ifT = kw('shot', 'if'), ed = kw('shot', 'edited');
+    const edited = t > ifT + .6;
+    $('#sh-time').textContent = edited ? '17 Oct 2026, 13:05:44' : '17 Oct 2026, 11:29:07';
+    $('#sh-amt').textContent = edited ? '₦150,000.00' : '₦15,000.00';
+    $('#sh-time').style.color = edited ? '#c62b22' : '#666';
+    $('#sh-verdict').innerHTML = t < ifT ? `<span style="color:#7ff0b4">✓ Matches the time on screen: 11:29 Lagos = 10:29 UTC</span>`
+      : `<span style="color:#ff6b5e">✗ Screen says 13:05. Session says 10:29.<br>NO RELEASE: the receipt was edited.</span>`;
+    css($('#sh-verdict'), { opacity: seg(t, kw('shot', 'exact') + 1.6, kw('shot', 'exact') + 2) * (t > ifT && t < ifT + .5 ? 0 : 1), transform: `scale(${t > ed - .2 ? lerp(1.15, 1, outCubic(seg(t, ed - .2, ed + .3))) : 1})`, transformOrigin: 'left center' });
+    const sh = t > ed - .2 && t < ed + .4 ? Math.sin(t * 70) * 12 : 0;
+    $('#stage').style.transform = sh ? `translateX(${sh}px)` : '';
+  },
+  proof(lt, d) {
+    const t = TL.t;
+    const ks = [kw('proof', 'thirty'), kw('proof', 'forty'), kw('proof', 'read')];
+    const vals = [[31, '/31'], [45, '/45']];
+    vals.forEach(([n, suf], i) => { const x = outCubic(seg(t, ks[i], ks[i] + 1.4)); $(`#pr-${'ab'[i]} b`).textContent = Math.round(n * x) + suf; css($(`#pr-${'ab'[i]}`), { opacity: seg(t, ks[i] - .3, ks[i]), transform: `translateY(${(1 - outCubic(seg(t, ks[i] - .3, ks[i] + .4))) * 50}px)` }); });
+    const c = seg(t, ks[2], ks[2] + 1.2);
+    $('#pr-c b').textContent = (lerp(38000, .22, outCubic(c))).toFixed(c > .9 ? 2 : 0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' ms';
+    css($('#pr-c'), { opacity: seg(t, ks[2] - .3, ks[2]) });
+  },
+  open(lt, d) {
+    css($('#op-t'), { opacity: seg(lt, 0, .5), transform: `translateY(${(1 - outCubic(seg(lt, 0, .7))) * 40}px)` });
+    const ks = [kw('open', 'device'), kw('open', 'no'), kw('open', 'offline'), kw('open', 'gemma')];
+    ks.forEach((k, i) => css($('#oc' + i), { opacity: seg(TL.t, k - .4, k), transform: `translateX(${(1 - outBack(seg(TL.t, k - .4, k + .2))) * -80}px)` }));
+    css($('#op-icon'), { opacity: seg(lt, .3, .9), transform: `translateY(${Math.sin(TL.t * 1.6) * 16}px) rotate(${Math.sin(TL.t) * 4}deg)` });
+  },
+  cta(lt, d) {
+    css($('#ct-icon'), { opacity: seg(lt, 0, .4), transform: `translate(-50%,-50%) scale(${lerp(.3, 1, outBack(seg(lt, 0, .8)))})` });
+    css($('#ct-url'), { opacity: seg(lt, .4, .9), transform: `translateX(-50%) scale(${lerp(.85, 1, outCubic(seg(lt, .4, 1.1)))})` });
+    const pulse = 1 + Math.sin(TL.t * 4) * .025;
+    css($('#ct-btn'), { opacity: seg(lt, 1, 1.4), transform: `translateX(-50%) scale(${seg(lt, 1, 1.4) * pulse})`, boxShadow: `0 0 ${40 + Math.sin(TL.t * 4) * 20}px rgba(25,199,155,.55)` });
+    css($('#ct-tag'), { opacity: seg(TL.t, kw('cta', 'check') - .2, kw('cta', 'check') + .3) });
+  },
+};
+const LAYER = { hook: 'hook', problem: 'problem', chain: 'chain', brand: 'brand', setup: 'app', check: 'app', paid: 'app', fake: 'app', shot: 'shot', proof: 'proof', open: 'open', cta: 'cta' };
+
+// Captions use the script's own words (with punctuation); the voice's word timings say when each is spoken.
+const norm = x => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+function lay(part) {
+  if (part.toks) return part.toks;
+  const toks = part.text.split(/\s+/).map(w => ({ w, t: null, d: 0 }));
+  let j = 0;
+  for (const wd of part.words) {
+    const n = norm(wd.w);
+    for (let k = j; k < Math.min(toks.length, j + 3); k++) {
+      const m = norm(toks[k].w);
+      if (m && (m.startsWith(n) || n.startsWith(m))) { toks[k].t = wd.t; toks[k].d = wd.d; j = k + 1; break; }
+    }
+  }
+  for (let k = toks.length - 1, next = part.start + part.dur; k >= 0; k--) { if (toks[k].t == null) { toks[k].t = next; toks[k].d = 0; } next = toks[k].t; }
+  const lines = []; let cur = [];
+  toks.forEach((tk, i) => { cur.push(tk); const end = /[.?!]$/.test(tk.w), comma = /,$/.test(tk.w); if (end || cur.length >= 10 || (comma && cur.length >= 6)) { lines.push(cur); cur = []; } });
+  if (cur.length) lines.push(cur);
+  return (part.toks = lines);
+}
+function captions(t) {
+  const cap = $('#cap');
+  const part = TL.scenes.flatMap(s => s.parts).find(p => t >= p.start - .15 && t <= p.start + p.dur + .3);
+  if (!part) { cap.style.opacity = 0; return; }
+  const lines = lay(part);
+  const line = lines.find((l, i) => t < (lines[i + 1]?.[0].t ?? Infinity)) || lines.at(-1);
+  cap.className = part.v === 'app' ? 'app' : '';
+  cap.innerHTML = line.map(w => `<span class="${t >= w.t + w.d ? 'said' : t >= w.t ? 'now' : ''}">${w.w}</span>`).join(' ');
+  cap.style.opacity = 1;
+}
+
+function render(t) {
+  TL.t = t;
+  $('#stage').style.transform = '';
+  css($('#g1'), { left: `${700 + Math.sin(t * .23) * 500}px`, top: `${-200 + Math.cos(t * .17) * 200}px` });
+  css($('#g2'), { left: `${1300 + Math.cos(t * .19) * 300}px`, top: `${500 + Math.sin(t * .21) * 200}px` });
+  $('#grid').style.backgroundPosition = `${t * 12}px ${t * 6}px`;
+  const shown = new Set();
+  for (const s of TL.scenes) {
+    const lt = t - s.start;
+    const layer = LAYER[s.id];
+    if (lt < -.01 || lt > s.dur + .01) continue;
+    TL.cur = s;
+    shown.add(layer);
+    const el = $('#s-' + layer);
+    // cross-fade between different layers; the shared phone layer stays put across its scenes
+    const prev = TL.scenes[TL.scenes.indexOf(s) - 1], next = TL.scenes[TL.scenes.indexOf(s) + 1];
+    const fin = prev && LAYER[prev.id] === layer ? 1 : seg(lt, 0, .35);
+    const fout = next && LAYER[next.id] === layer ? 1 : 1 - seg(lt, s.dur - .35, s.dur);
+    el.style.opacity = Math.min(fin, fout);
+    A[layer](lt, s.dur);
+  }
+  document.querySelectorAll('.scene').forEach(el => { if (!shown.has(el.id.slice(2))) el.style.opacity = 0; });
+  const brandAt = TL.scenes.find(s => s.id === 'setup').start;
+  $('#logo').style.opacity = t > brandAt && t < TL.scenes.find(s => s.id === 'cta').start ? 1 : 0;
+  captions(t);
+  $('#prog').style.width = `${(t / TL.total) * 100}%`;
+}
+
+window.ready = fetch('out/timeline.json').then(r => r.json()).then(j => { TL = j; build(); render(0); return j.total; });
+// live preview: ?play plays in real time with the voice files
+if (location.search.includes('play')) window.ready.then(() => { const t0 = performance.now(); const loop = () => { render((performance.now() - t0) / 1000); requestAnimationFrame(loop); }; loop(); });
+</script>
+</body>
+</html>
